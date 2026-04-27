@@ -1,0 +1,1207 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>World Chain Specs</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-2459343d.css">
+        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-287d2014.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9878744d.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">World Chain Specs</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="world-chain-specs"><a class="header" href="#world-chain-specs">World Chain Specs</a></h1>
+<h2 id="about-world-chain"><a class="header" href="#about-world-chain">About World Chain</a></h2>
+<p><a href="https://worldscan.org/">World Chain</a> is a blockchain designed for humans. Prioritizing scalability and accessibility for real users, World Chain provides the rails for a frictionless onchain UX.</p>
+<h2 id="site-navigation"><a class="header" href="#site-navigation">Site Navigation</a></h2>
+<p>Navigate this site using the sidebar on the left, the search icon found at the top of this page, or the left/right
+navigation buttons found to the sides of each page.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="flashblocks-p2p-extension"><a class="header" href="#flashblocks-p2p-extension">Flashblocks P2P Extension</a></h1>
+<p><em>This document is an extension to the original Flashblocks specification, modifying the flashblock propagation mechanism to use a peer-to-peer (P2P) network instead of WebSockets. It highlights the new P2P protocol and the changes in Rollup-Boost and builder interactions, aimed at simplifying distribution and improving fault tolerance in High Availability (HA) sequencer setups.</em></p>
+<p><strong>Table of Contents</strong></p>
+<ul>
+<li>
+<p><a href="#abstract">Abstract</a></p>
+</li>
+<li>
+<p><a href="#motivation">Motivation</a></p>
+</li>
+<li>
+<p><a href="#specification">Specification</a></p>
+<ul>
+<li>
+<p><a href="#terminology">Terminology</a></p>
+</li>
+<li>
+<p><a href="#data-structures">Data Structures</a></p>
+<ul>
+<li><a href="#authorization"><strong><code>Authorization</code></strong></a></li>
+<li><a href="#authorized-message"><strong><code>Authorized Message</code></strong></a></li>
+<li><a href="#startpublish"><strong><code>StartPublish</code></strong></a></li>
+<li><a href="#stoppublish"><strong><code>StopPublish</code></strong></a></li>
+</ul>
+</li>
+<li>
+<p><a href="#flashblocks-p2p-protocol">Flashblocks P2P Protocol</a></p>
+<ul>
+<li><a href="#protocol-overview">Protocol Overview</a></li>
+<li><a href="#message-types">Message Types</a></li>
+<li><a href="#authorization-and-security">Authorization and Security</a></li>
+<li><a href="#multi-builder-coordination">Multi-Builder Coordination</a></li>
+</ul>
+</li>
+<li>
+<p><a href="#rollup-boost-and-builder-communication">Rollup-Boost and Builder Communication</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="abstract"><a class="header" href="#abstract">Abstract</a></h1>
+<p>This document introduces an enhancement to Flashblocks where the propagation of partial blocks (“flashblocks”) is done over an Ethereum P2P subprotocol instead of a WebSocket broadcast. By integrating flashblock distribution into the peer-to-peer network, we eliminate the need for a dedicated WebSocket proxy and enable more robust, decentralized propagation of flashblock data. Crucially, this P2P approach uses cryptographic authorization to ensure that only an <strong>authorized</strong> block builder (and its designated successors in an HA setup) can publish flashblocks, improving fault tolerance during sequencer failovers. The end result is a simpler and more resilient system for delivering rapid preconfirmation data to users, without altering the core OP Stack protocol.</p>
+<h1 id="motivation"><a class="header" href="#motivation">Motivation</a></h1>
+<p>The original Flashblocks design relied on a centralized broadcast (via Rollup-Boost and a WebSocket proxy) to propagate flashblocks to RPC providers. While effective, that design introduced operational complexity and potential single points of failure:</p>
+<ul>
+<li><strong>Operational Complexity:</strong> Sequencer operators had to manage a WebSocket broadcasting service (e.g. Rollup-Boost’s WebSocket proxy) to fan-out flashblocks to providers. In multi-sequencer (HA) configurations, handing off this connection or migrating subscribers was cumbersome.</li>
+<li><strong>Failover Challenges:</strong> In a High Availability sequencer setup, if the active sequencer failed the act of switching to a new sequencer/rollup-boost/builder combo would mean that already published flashblocks would not make it in the new block produced by the new builder. This breaks the promise that flashblocks makes to its consumers.</li>
+<li><strong>Scalability and Decentralization:</strong> Relying on a single hub (the sequencer’s Rollup-Boost) to redistribute flashblocks could become a bottleneck. A P2P approach can naturally scale out to many peers and align with Ethereum’s existing propagation model for blocks and transactions.</li>
+</ul>
+<p><strong>P2P Propagation</strong> addresses these issues by leveraging a gossip network for flashblocks. In this model, any number of RPC provider nodes (or other interested parties) can connect to the flashblock P2P network to receive preconfirmation updates. Failover is handled gracefully through the RLPx protocol: if a new sequencer takes over, its builder is already aware of previously published flashblocks, and so it can build on top of what has already been promised to the network.</p>
+<h1 id="specification"><a class="header" href="#specification">Specification</a></h1>
+<h2 id="terminology"><a class="header" href="#terminology">Terminology</a></h2>
+<p>We inherit all terminology from the original Flashblocks spec (Sequencer, Block Builder, Rollup-Boost, etc.), with a few new terms introduced:</p>
+<ul>
+<li><strong>Authorizer</strong> – The entity that vouches for a block builder’s legitimacy to produce flashblocks. In practice, this is rollup-boost who signs an authorization for a given builder each block cycle.</li>
+<li><strong>Builder Public Key</strong> – A cryptographic public key identifying a builder on the flashblocks P2P network. This is distinct from an Ethereum address; it’s used for signing/validating flashblock messages.</li>
+<li><strong>Flashblocks P2P Network</strong> – The peer-to-peer overlay network (using Ethereum’s devp2p protocols) through which flashblock messages are gossiped. Participants include all builders and one or more subscribing nodes (e.g. RPC providers, possibly other sequencer nodes in standby).</li>
+<li><strong>Publisher</strong> – The current active builder that is publishing flashblocks for the ongoing L2 block. In an HA setup, the role of publisher can transfer to a new builder if the sequencer fails over.</li>
+</ul>
+<h2 id="flashblocks-sequence-diagram"><a class="header" href="#flashblocks-sequence-diagram">Flashblocks Sequence Diagram</a></h2>
+<pre class="mermaid">%%{init: {'sequence': {'noteMargin': 15}} }%%
+sequenceDiagram
+    participant ON as op-node&lt;br/&gt;(Sequencer)
+    participant RB as rollup-boost&lt;br/&gt;(Authorizer)
+    participant B as world-chain reth&lt;br/&gt;(Builder)
+    participant P2P as P2P Peers&lt;br/&gt;(Receiving Nodes)
+
+    Note over ON,P2P: ── Slot N (T=0s) ── FCU + Authorization
+    ON-&gt;&gt;RB: engine_forkchoiceUpdatedV3(fcs, attributes)
+    Note over RB: Derive payload_id deterministically:&lt;br/&gt;payload_id = hash(parent_block_hash, attributes)&lt;br/&gt;(same algorithm as the builder)
+    Note over RB: Create Authorization token:&lt;br/&gt;sign(payload_id ‖ timestamp ‖ builder_vk)&lt;br/&gt;with authorizer_sk
+    RB-&gt;&gt;B: flashblocks_forkchoiceUpdatedV3(fcs, attributes, authorization)
+    Note over B: Derive same payload_id from attributes&lt;br/&gt;Match authorization.payload_id to job
+    B--&gt;&gt;RB: ForkchoiceUpdated { payload_id }
+    RB--&gt;&gt;ON: ForkchoiceUpdated { payload_id }
+
+    Note over ON,P2P: Flashblock production (T≈0s–2s)
+    Note over B: start_publishing(auth)
+    B-&gt;&gt;P2P: P2P: StartPublish (Authorized)
+    Note over P2P: Verify authorizer_sig&lt;br/&gt;Verify builder_sig&lt;br/&gt;Track active publisher
+
+    Note over B: spawn_build_job()&lt;br/&gt;reads txpool, builds payload
+
+    Note over B: T≈200ms: flashblock interval fires
+    Note over B: Flashblock #0 diff:&lt;br/&gt;empty → current best
+    B-&gt;&gt;P2P: P2P: FlashblocksPayloadV1 #0 (Authorized)
+    Note over P2P: Verify signatures&lt;br/&gt;Apply flashblock #0
+
+    Note over B: ~50ms recommits&lt;br/&gt;rebuild with new txs
+
+    Note over B: T≈400ms: flashblock interval fires
+    Note over B: Flashblock #1 diff:&lt;br/&gt;#0 → new best (new txs only)
+    B-&gt;&gt;P2P: P2P: FlashblocksPayloadV1 #1 (Authorized)
+
+    Note over B: ~50ms recommits...
+
+    Note over B: T≈600ms: flashblock interval fires
+    B-&gt;&gt;P2P: P2P: FlashblocksPayloadV1 #2 (Authorized)
+
+    Note over B: ... repeats every ~200ms until deadline
+
+    Note over ON,P2P: Seal the block (T≈2s)
+    ON-&gt;&gt;RB: engine_getPayloadV3(payload_id)
+    RB-&gt;&gt;B: engine_getPayloadV3(payload_id)
+    Note over B: Return committed payload&lt;br/&gt;(state at last flashblock)
+    B--&gt;&gt;RB: ExecutionPayloadEnvelopeV3
+    RB--&gt;&gt;ON: ExecutionPayloadEnvelopeV3
+    Note over B: stop_publishing()
+    B-&gt;&gt;P2P: P2P: StopPublish (Authorized)
+    Note over P2P: Verify signatures&lt;br/&gt;Remove active publisher
+    Note over ON,P2P: ── Slot N+1 (T≈2s) ──
+</pre>
+
+<h2 id="data-structures"><a class="header" href="#data-structures">Data Structures</a></h2>
+<p>The fundamental flashblock data structures (<code>FlashblocksPayloadV1</code>, <code>ExecutionPayloadFlashblockResultV1</code>, <code>ExecutionPayloadStaticV1</code>, and the various Metadata containers) remain unchanged. Flashblocks are still represented as a sequence of incremental payloads culminating in a full block.</p>
+<p>To support P2P propagation and authorization, we introduce several new structures:</p>
+<h3 id="authorization"><a class="header" href="#authorization"><strong><code>Authorization</code></strong></a></h3>
+<p>Represents a sequencer’s cryptographic authorization for a specific builder to produce a block with a given payload context. This is essentially a signed token from the sequencer (authorizer) that the builder includes with its flashblocks.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct Authorization {
+    pub payload_id: PayloadId,
+    pub timestamp: u64,
+    pub builder_vk: VerifyingKey,
+    pub authorizer_sig: Signature,
+}
+<span class="boring">}</span></code></pre>
+<ul>
+<li><code>payload_id</code>: The unique ID for this block’s payload (as provided by <code>engine_forkchoiceUpdated</code> in the OP Stack Engine API). All flashblocks for the block share this ID.</li>
+<li><code>timestamp</code>: The timestamp associated with this payload</li>
+<li><code>builder_vk</code>: The verifying key identifying the builder authorized to publish this block’s flashblocks. Peers will use this to verify the builder’s signatures on messages.</li>
+<li><code>authorizer_sig</code>: A signature produced by the sequencer (authorizer) over the concatenation of <code>payload_id</code>, <code>timestamp</code>, and <code>builder_vk</code>. This proves that the sequencer has approved the given builder (and key) to act for this block. Only one authorizer key (controlled by the rollup-boost operator) is recognized by the network, and all peers are configured with its public key for verification.</li>
+</ul>
+<h3 id="authorized-message"><a class="header" href="#authorized-message"><strong><code>Authorized Message</code></strong></a></h3>
+<p>Container for any flashblocks P2P message that requires authorization. It bundles a payload (one of the message types defined below) with the authorization and a builder’s signature.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct Authorized {
+    pub msg: AuthorizedMsg,
+    pub authorization: Authorization,
+    pub actor_sig: Signature,
+}
+<span class="boring">}</span></code></pre>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum AuthorizedMsg {
+    FlashblocksPayloadV1(FlashblocksPayloadV1) = 0x00,
+    StartPublish(StartPublish) = 0x01,
+    StopPublish(StopPublish) = 0x02,
+}
+<span class="boring">}</span></code></pre>
+<ul>
+<li>
+<p><code>authorization</code>: The Authorization object, as described above.</p>
+</li>
+<li>
+<p><code>msg</code>: The message content. This is a tagged union that can be one of:</p>
+<ul>
+<li>A <strong>Flashblock Payload</strong> – Contains a <code>FlashblocksPayloadV1</code> (partial block delta), see below.</li>
+<li>A <strong>StartPublish</strong> signal – Indicates the builder is starting to publish a new block (detailed in <a href="#startpublish">StartPublish</a>).</li>
+<li>A <strong>StopPublish</strong> signal – Indicates the builder is stopping publication (detailed in <a href="#stoppublish">StopPublish</a>).</li>
+</ul>
+</li>
+<li>
+<p><code>actor_sig</code>: The builder’s signature over the combination of the <code>msg</code> and the <code>authorization</code>. This attests that the message indeed comes from the holder of the <code>builder_sk</code> in the Authorization, and that it hasn’t been tampered with in transit.</p>
+</li>
+</ul>
+<p>Every P2P message in the Flashblocks protocol is sent as an <code>AuthorizedMessage</code>. This double-signature scheme (authorizer + builder) provides two layers of security:</p>
+<ol>
+<li>Only a builder with a valid Authorization (signed by the sequencer) can get its messages accepted by peers.</li>
+<li>Only the genuine builder (holding the private key corresponding to <code>builder_sk</code>) can produce a valid <code>builder_signature</code> on the message content.</li>
+</ol>
+<h3 id="startpublish"><a class="header" href="#startpublish"><strong><code>StartPublish</code></strong></a></h3>
+<p>A small message indicating the intention to begin publishing flashblocks for a new L2 block.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct StartPublish;
+<span class="boring">}</span></code></pre>
+<p>The <code>StartPublish</code> message is always sent wrapped in an <code>AuthorizedMessage</code> (with the appropriate authorization and signatures). It serves as an announcement to the network that <em>“Builder X is about to start publishing”</em></p>
+<h3 id="stoppublish"><a class="header" href="#stoppublish"><strong><code>StopPublish</code></strong></a></h3>
+<p>An authorized message indicating that the builder will no longer publish any flashblocks</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct StopPublish;
+<span class="boring">}</span></code></pre>
+<p><strong>Note:</strong> A builder will typically send a <code>StopPublish</code> when it receives a <code>ForkChoiceUpdated</code> without an accompanying <code>Authorization</code> from rollup-boost or upon handing off flashblock production to a new builder.</p>
+<h2 id="flashblocks-p2p-protocol"><a class="header" href="#flashblocks-p2p-protocol">Flashblocks P2P Protocol</a></h2>
+<blockquote>
+<p><strong>See also:</strong> <a href="flashblocks/flashblocks_p2p_v2.html">Flashblocks P2P Protocol v2</a> amends this section with bounded, latency-optimized peer selection.</p>
+</blockquote>
+<h3 id="protocol-overview"><a class="header" href="#protocol-overview">Protocol Overview</a></h3>
+<p>Flashblocks P2P communication is implemented as a custom Ethereum subprotocol. Specifically, it defines a new devp2p capability:</p>
+<ul>
+<li><strong>Protocol Name:</strong> <code>flblk</code> (flashblocks)</li>
+<li><strong>Version:</strong> <code>1</code></li>
+</ul>
+<p>Nodes that support flashblocks will advertise this capability when establishing devp2p connections. Once connected, they can exchange flashblock messages as defined in this spec.</p>
+<p>All flashblock messages are encoded in a compact binary format (analogous to Ethereum block gossip). Each message begins with a one-byte type discriminator, followed by the serialized content. The primary message type is an <code>AuthorizedMessage</code> (discriminator <code>0x00</code>), which, as described, contains a nested payload type.</p>
+<p><strong>Key design features of the P2P protocol:</strong></p>
+<ul>
+<li><strong>Multipeer Gossip:</strong> A builder’s flashblock is forwarded to all connected peers, who in turn may forward it to their peers, etc., ensuring the payload reaches all participants without needing a single central broadcaster. The protocol includes basic duplicate suppression so that flashblocks aren’t endlessly propagated in loops.</li>
+<li><strong>Real-time Coordination:</strong> Using <code>StartPublish</code> and <code>StopPublish</code> signals, multiple potential publishers (builders) can coordinate access to the network. This prevents conflicts where two builders might try to publish simultaneously, and allows a smooth handoff in failover scenarios (detailed below).</li>
+</ul>
+<h3 id="message-types"><a class="header" href="#message-types">Message Types</a></h3>
+<p>Within the <code>AuthorizedMsg</code> union, we define the following variants and their semantics:</p>
+<ul>
+<li><strong>Flashblock Payload Message:</strong> Carries a <code>FlashblocksPayloadV1</code> (as defined in the original spec) for a specific partial block. This includes the incremental transactions, updated state root, receipts root, logs bloom, etc., up through that flashblock. Peers receiving this message will apply the included state updates to their preconfirmation cache. Each Flashblock message has an <code>index</code> (the flashblock sequence number) and may include the <code>base</code> section if it’s the first flashblock (index 0) for that block.</li>
+<li><strong>StartPublish Message:</strong> Announces the start of a new publishers flashblock sequence. Peers use this to note which builder is now active for a given L2 block number, possibly resetting any previous state or halting their own publishing.</li>
+<li><strong>StopPublish Message:</strong> Indicates the end of the flashblock sequence for the current publisher. After this message, no further flashblocks from that publisher should arrive. Inactive or waiting publishers use this as a cue that they may now take over for subsequent flashblocks.</li>
+</ul>
+<p>All these are encapsulated in <code>AuthorizedMsg</code> with the requisite signatures.</p>
+<h3 id="authorization-and-security"><a class="header" href="#authorization-and-security">Authorization and Security</a></h3>
+<p>The P2P protocol introduces a trust model wherein peers accept flashblocks only from an <strong>authorized builder</strong>. The security measures include:</p>
+<ul>
+<li>
+<p><strong>Authorizer Signature Verification:</strong> Upon receiving any <code>AuthorizedMessage</code>, a peer will first verify the <code>authorizer_sig</code> in the <code>Authorization</code> against the known authorizer public key. This confirms that rollup-boost has indeed permitted the stated builder to produce the block with the given <code>payload_id</code> and timestamp. If this signature is missing or invalid, the message is discarded as untrusted.</p>
+</li>
+<li>
+<p><strong>Builder Signature Verification:</strong> Next, the peer verifies the <code>builder_signature</code> on the message content using the <code>builder_vk</code> provided in the Authorization. This ensures the message was genuinely produced by the authorized builder and not altered. If this check fails, the message is rejected.</p>
+</li>
+<li>
+<p><strong>Payload Consistency Checks:</strong> Peers also check that the fields in the message are self-consistent and match expectations:</p>
+<ul>
+<li>The <code>payload_id</code> in the Authorization must match the <code>FlashblocksPayloadV1.payload_id</code> (for flashblock messages). Each builder’s flashblock messages carry the same payload_id that was authorized, ensuring they all belong to the same block-building session.</li>
+<li><strong>Freshness:</strong> The <code>timestamp</code> in Authorization helps guard against replay of old messages. If a flashblock or StartPublish arrives with a significantly older timestamp (or for an already completed block), peers will ignore it and decrement the sender’s reputation.</li>
+</ul>
+</li>
+</ul>
+<p>These measures ensure that <strong>only</strong> the rollup-boost sanctioned builder’s data is propagated and that it’s cryptographically sound. Unauthorized parties cannot inject false flashblocks or tamper with content without detection. This design also allows dynamic builder changes: as long as the sequencer signs a new Authorization, the peers will accept the new builder’s messages even if they have never seen that builder before, because trust is transitive from the authorizers’s key.</p>
+<h3 id="multi-builder-coordination"><a class="header" href="#multi-builder-coordination">Multi-Builder Coordination</a></h3>
+<p>A major benefit of the P2P approach is the ability to coordinate multiple builders in an HA (High Availability) setting. The <code>StartPublish</code> and <code>StopPublish</code> messages, in conjunction with a small amount of logic in Rollup-Boost and the network, handle the arbitration:</p>
+<ul>
+<li><strong>Single Publisher Rule:</strong> The network expects at most one builder to be actively publishing flashblocks for a given L2 block number at any time. If two different builders both attempt to publish for the same block, the conflict must be resolved to maintain a consistent preconfirmation state.</li>
+<li><strong>Announcing Intent – <code>StartPublish</code>:</strong> When Rollup-Boost (sequencer) initiates a new block with an external builder, it immediately broadcasts a <code>StartPublish</code> message (as an AuthorizedMessage) from that builder. This tells all peers: “Builder X is about to start publishing” If any other builder was thinking of building block N (perhaps there was a recent failover), it will see this and <strong>stand down</strong>.</li>
+<li><strong>Graceful Yield – reacting to <code>StartPublish</code>:</strong> If a builder is currently publishing and receives a <code>StartPublish</code> from a <em>different</em> builder for the same or next block, it means a failover or override is happening. The expected behavior is that the current publisher will cease publishing (and issue a <code>StopPublish</code>). The protocol is designed such that the honest builder who is not supposed to publish will yield to the authorized one. The reference implementation will automatically send a <code>StopPublish</code> if it is publishing and learns that another builder has taken over authority for the block. The new builder will wait until it receives the <code>StopPublish</code> before continuing.</li>
+<li><strong>Completion – <code>StopPublish</code>:</strong> When a builder receives the next FCU <em>without</em> an accompanying <code>Authorization</code>, it will send out a <code>StopPublish</code>. This removes the builder from the “active publisher” role in the eyes of the network. If there was another builder in waiting (perhaps one that had attempted to start earlier but was told to wait), that waiting builder will now see that the coast is clear.</li>
+<li><strong>Timeouts and Fallback:</strong> There is an implicit timeout in the coordination. If a builder is in a waiting state after announcing <code>StartPublish</code> but for some reason the previous publisher fails to produce a <code>StopPublish</code> (for example, if it crashed mid-block), other participants will not wait indefinitely. In our design, if a new block number is reached and the previous publisher hasn’t stopped we assume the previous builder is incapacitated and proceed with the new publisher.</li>
+</ul>
+<p>This coordination ensures that in an HA setup with multiple sequencer instances and multiple builders, <strong>preconfirmation data remains consistent</strong>: only one set of flashblocks is ever in flight for a given block. If a sequencer failover occurs, the worst-case scenario (which occurs only during a very rare race condition) is a single block publication gap or discontinuity at a block boundary. In the far more likely case, there will be exactly no flashblock disruption. The next publisher will simply start where the last publisher left off, even if that is mid block.</p>
+<h2 id="rollup-boost-and-builder-communication"><a class="header" href="#rollup-boost-and-builder-communication">Rollup-Boost and Builder Communication</a></h2>
+<p>In the P2P-enhanced design, Rollup-Boost’s interaction with the external block builder is slightly adjusted:</p>
+<ul>
+<li><strong>Authorization Delivery:</strong> When the sequencer (op-node) triggers a new block proposal via <code>engine_forkchoiceUpdated</code> (with payload attributes), Rollup-Boost creates an <code>Authorization</code> for the chosen builder. This requires that Rollup-Boost knows the builder’s public key in advance. In practice, the builder can be configured or registered with Rollup-Boost, providing its long-term public key. Rollup-Boost uses its <strong>authorizer private key</strong> (associated with the L2 chain or sequencer) to sign the authorization (covering payload_id, timestamp, builder’s key).</li>
+<li><strong>Forkchoice Updated Forwarding:</strong> Rollup-Boost forwards the fork choice update to the builder as usual (so the builder can start building the block). In this modified protocol, the fork choice update (or a parallel communication) includes the newly created <code>Authorization</code>. For example, a custom field or side-channel could convey the authorizer’s signature to the builder. <strong>(Implementation-wise, this might be an extension of the Engine API or an internal call – the key point is the builder receives the Authorization token before it begins sending flashblocks.)</strong></li>
+<li><strong>StartPublish Broadcast:</strong> If the builder was not previously publishing, then immediately after receiving the authorization it will emit a <code>StartPublish</code> message over the P2P network. This tells all listening nodes that the authorized builder will begin flashblock publication.</li>
+<li><strong>Streaming Flashblocks:</strong> The builder executes transactions and produces flashblocks incrementally just as described in the original spec’s Flashblock Construction Process. However, instead of returning these payloads to Rollup-Boost, the builder now signs each flashblock with its key and directly broadcasts an Authorized Flashblock message to the P2P network.</li>
+<li><strong>No Inline Validation by Sequencer:</strong> In the original design, Rollup-Boost would validate each flashblock against the local execution engine before propagating it. In the P2P model, this is not done synchronously for each flashblock (it would negate some latency benefits). Instead, trust is managed via the Authorization. The sequencer trusts its chosen builder to only send valid blocks (and will ultimately verify the final block when <code>engine_getPayload</code> is called). Peers trust the flashblocks because they trust the Rollup-Boost’s signature.</li>
+</ul>
+<p>In summary, Rollup-Boost’s role shifts from being a <strong>middleman for data</strong> to being a <strong>controller and coordinator</strong>. It authorizes the builder and informs the network about which builder is active, but it doesn’t need to ferry every flashblock through itself. This streamlines the path from builder to RPC providers.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="flashblocks-p2p-protocol-v2"><a class="header" href="#flashblocks-p2p-protocol-v2">Flashblocks P2P Protocol v2</a></h1>
+<p><em>This document specifies changes to the flashblocks P2P protocol (<code>flblk</code>) to replace full-broadcast fanout with bounded, latency-optimized peer selection. It is an amendment to the existing <a href="flashblocks/specs/flashblocks_p2p.html">Flashblocks P2P Extension</a>.</em></p>
+<h2 id="problem"><a class="header" href="#problem">Problem</a></h2>
+<p>The current flashblocks P2P protocol broadcasts every <code>FlashblocksPayloadV1</code> to <strong>all</strong> connected peers (<code>handler.rs:585</code>, <code>connection.rs:97-129</code>). A node with N peers sends N copies of every flashblock. For a node connected to 50 peers, that is 50x outgoing bandwidth per flashblock. As the network grows, this becomes unsustainable.</p>
+<h2 id="design-goals"><a class="header" href="#design-goals">Design Goals</a></h2>
+<ol>
+<li><strong>Reduce bandwidth</strong> — Each node sends flashblocks to a bounded number of peers instead of all peers.</li>
+<li><strong>Optimize latency</strong> — Nodes periodically rotate out their slowest receive peers in favor of random alternatives.</li>
+<li><strong>Reliability</strong> — Multiple receive peers provide redundancy against individual peer failures.</li>
+<li><strong>Trusted peer priority</strong> — Trusted peers are always served when they request flashblocks, regardless of limits.</li>
+<li><strong>Uniform roles</strong> — Builders and consumers follow the same protocol. No special-casing by role.</li>
+</ol>
+<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
+<p>Each node maintains two bounded peer sets:</p>
+<ul>
+<li><strong>Send Set</strong> (max <code>max_send_peers</code>, default 10): Peers this node actively forwards flashblocks to. These are peers that have sent a <code>RequestFlashblocks</code> and been accepted. Trusted peers bypass the limit.</li>
+<li><strong>Receive Set</strong> (max <code>max_receive_peers</code>, default 3): Peers this node actively receives flashblocks from. These are peers this node has selected as active feed sources.</li>
+</ul>
+<p>Flashblocks propagate through the network as a directed acyclic graph: the builder sends to its send set, those nodes relay to their send sets, and so on. With a fanout of 10, a network of N nodes requires approximately log₁₀(N) hops from builder to the most distant node.</p>
+<p>Periodically, each node evaluates the latency of its receive peers and may rotate out the highest-latency peer in favor of a randomly-selected alternative, one peer at a time.</p>
+<h2 id="protocol-version"><a class="header" href="#protocol-version">Protocol Version</a></h2>
+<p>This change adds new message types to the <code>flblk</code> protocol. The protocol version is bumped from <code>1</code> to <code>2</code>. Nodes advertising <code>flblk/2</code> support the fanout control messages described below. Nodes running <code>flblk/1</code> will not understand these messages and are incompatible.</p>
+<h2 id="new-message-types"><a class="header" href="#new-message-types">New Message Types</a></h2>
+<p>Four unsigned control messages are added to <code>FlashblocksP2PMsg</code>:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Discriminator</th><th>Message</th><th>Direction</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>0x01</code></td><td><code>RequestFlashblocks</code></td><td>Receiver → Sender</td><td>“I want to receive flashblocks from you”</td></tr>
+<tr><td><code>0x02</code></td><td><code>AcceptFlashblocks</code></td><td>Sender → Receiver</td><td>“Accepted. I will send you flashblocks”</td></tr>
+<tr><td><code>0x03</code></td><td><code>RejectFlashblocks</code></td><td>Sender → Receiver</td><td>“Rejected. I am at capacity”</td></tr>
+<tr><td><code>0x04</code></td><td><code>CancelFlashblocks</code></td><td>Receiver → Sender</td><td>“Stop sending me flashblocks”</td></tr>
+</tbody>
+</table>
+</div>
+<p>These messages carry no payload. The connection context (peer ID) provides all necessary information.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum FlashblocksP2PMsg {
+    /// Existing authorized message wrapper (flashblock payloads, StartPublish, StopPublish).
+    Authorized(Authorized) = 0x00,
+    /// New fanout control messages (unsigned).
+    RequestFlashblocks = 0x01,
+    AcceptFlashblocks = 0x02,
+    RejectFlashblocks = 0x03,
+    CancelFlashblocks = 0x04,
+}
+<span class="boring">}</span></code></pre>
+<h3 id="message-semantics"><a class="header" href="#message-semantics">Message Semantics</a></h3>
+<p><strong><code>RequestFlashblocks</code></strong> — Sent by a node that wants to receive flashblocks from the connected peer. The recipient evaluates:</p>
+<ol>
+<li>Is the requester a trusted peer? → Always accept (trusted peers bypass <code>max_send_peers</code>).</li>
+<li>Is the number of non-trusted peers in the send set below <code>max_send_peers</code>? → Accept.</li>
+<li>Otherwise → Reject.</li>
+</ol>
+<p><strong><code>AcceptFlashblocks</code></strong> — Response to <code>RequestFlashblocks</code>. After this, the sender begins forwarding all <code>Authorized</code> messages to the receiver and adds the receiver to its send set.</p>
+<p><strong><code>RejectFlashblocks</code></strong> — Response to <code>RequestFlashblocks</code> when the sender cannot accommodate more peers. The requester should try another peer.</p>
+<p><strong><code>CancelFlashblocks</code></strong> — Sent only by a receiver to the sender it no longer wants to receive flashblocks from (e.g., during peer rotation).</p>
+<p>After receiving <code>CancelFlashblocks</code>, the sender immediately stops forwarding flashblocks to that peer and removes it from its send set.</p>
+<h2 id="peer-management"><a class="header" href="#peer-management">Peer Management</a></h2>
+<h3 id="per-node-state"><a class="header" href="#per-node-state">Per-Node State</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct FanoutState {
+    /// Peers we are actively sending flashblocks to.
+    send_set: HashSet&lt;PeerId&gt;,
+    /// Peers we are actively receiving flashblocks from.
+    receive_set: HashSet&lt;PeerId&gt;,
+    /// Peers we have sent RequestFlashblocks to but not yet received a response.
+    pending_requests: HashSet&lt;PeerId&gt;,
+    /// Sliding-window latency stats per receive peer.
+    peer_latency: HashMap&lt;PeerId, LatencyTracker&gt;,
+    /// Whether a rotation is currently in progress.
+    rotation_in_progress: bool,
+}
+<span class="boring">}</span></code></pre>
+<h3 id="bootstrapping-node-startup"><a class="header" href="#bootstrapping-node-startup">Bootstrapping (Node Startup)</a></h3>
+<p>When a node starts and connects to peers via devp2p:</p>
+<ol>
+<li>As peers connect and complete the <code>flblk/2</code> handshake, discover whether they are trusted or untrusted.</li>
+<li>Only request peers whose trust classification is known, so trusted peers are always considered first.</li>
+<li>Continue sending requests as new peers connect until <code>receive_set.len() &gt;= max_receive_peers</code>.</li>
+<li>Once the receive set is full, stop sending unsolicited requests (further changes happen via rotation).</li>
+</ol>
+<h3 id="handling-incoming-requestflashblocks"><a class="header" href="#handling-incoming-requestflashblocks">Handling Incoming <code>RequestFlashblocks</code></a></h3>
+<pre><code>receive RequestFlashblocks from peer P:
+
+if P is trusted:
+    add P to send_set
+    send AcceptFlashblocks to P
+
+else if non_trusted_send_count &lt; max_send_peers:
+    add P to send_set
+    send AcceptFlashblocks to P
+
+else:
+    send RejectFlashblocks to P
+</code></pre>
+<h3 id="handling-disconnections"><a class="header" href="#handling-disconnections">Handling Disconnections</a></h3>
+<p>When a peer disconnects unexpectedly (connection drops):</p>
+<ul>
+<li>If peer was in <strong>send set</strong> → remove it. The slot is now available for future requests.</li>
+<li>If peer was in <strong>receive set</strong> → remove it. Immediately attempt to fill the slot by sending <code>RequestFlashblocks</code> to a random connected peer not already in <code>receive_set</code> or <code>pending_requests</code>.</li>
+<li>If peer was in <strong>pending requests</strong> → remove it. If receive set is not full, try another peer.</li>
+</ul>
+<h3 id="forwarding-rules"><a class="header" href="#forwarding-rules">Forwarding Rules</a></h3>
+<p>When a node receives an <code>Authorized</code> message from a peer in its receive set:</p>
+<ul>
+<li><strong><code>FlashblocksPayloadV1</code></strong>: Verify signatures, process the flashblock (update state, emit to flashblock stream). Then forward the serialized bytes to all peers in the <strong>send set</strong> except the peer that sent it.</li>
+<li><strong><code>StartPublish</code></strong>: Verify signatures and process locally. Do not relay it beyond the direct neighbor that sent it.</li>
+<li><strong><code>StopPublish</code></strong>: Same as <code>StartPublish</code> — process locally, do not relay.</li>
+</ul>
+<p>If a node receives an <code>Authorized(FlashblocksPayloadV1)</code> from a peer <strong>not</strong> in its receive set, or from a peer whose <code>RequestFlashblocks</code> is still pending, the message should be ignored and the peer should be penalized. This prevents unsolicited data delivery.</p>
+<h3 id="duplicate-handling"><a class="header" href="#duplicate-handling">Duplicate Handling</a></h3>
+<p>Since a node receives from up to <code>max_receive_peers</code> peers, it will receive multiple copies of each flashblock. This is expected behavior in the new protocol.</p>
+<ul>
+<li><strong>First copy</strong>: Process normally (update state, emit to stream, forward to send set). Record latency for the delivering peer.</li>
+<li><strong>Subsequent copies (same flashblock from different peers)</strong>: Record the latency for the delivering peer. Discard the flashblock data.</li>
+<li><strong>Same flashblock from the same peer twice</strong>: This is NOT expected. Apply reputation penalty as before (<code>ReputationChangeKind::AlreadySeenTransaction</code>).</li>
+</ul>
+<p>This is a behavioral change from the current protocol, where any duplicate from any peer triggers a reputation penalty (<code>connection.rs:288-290</code>).</p>
+<h2 id="latency-based-peer-rotation"><a class="header" href="#latency-based-peer-rotation">Latency-Based Peer Rotation</a></h2>
+<h3 id="latency-measurement"><a class="header" href="#latency-measurement">Latency Measurement</a></h3>
+<p>Each <code>FlashblocksPayloadV1</code> includes a <code>flashblock_timestamp</code> in its metadata, set by the builder at creation time. When a node receives a flashblock from a receive peer, it computes:</p>
+<pre><code>one_way_latency = now() - flashblock_timestamp
+</code></pre>
+<p>This measurement is attributed to the specific peer that delivered the flashblock. Nodes maintain a sliding window of the last <code>latency_window</code> (default 1000) measurements per receive peer and compute a moving average.</p>
+<p>Since all receive peers deliver the same flashblock (with the same <code>flashblock_timestamp</code>), the <strong>relative ordering</strong> of peers by latency is accurate even with clock skew between the builder and receiver.</p>
+<h3 id="rotation-algorithm"><a class="header" href="#rotation-algorithm">Rotation Algorithm</a></h3>
+<p>The receive set must never exceed <code>max_receive_peers</code>.</p>
+<p>When rotating:</p>
+<ol>
+<li>Select the worst-scoring peer in the current receive set.</li>
+<li>Remove that peer from the receive set immediately and send <code>CancelFlashblocks</code>.</li>
+<li>Pick a replacement candidate, prioritizing trusted peers.</li>
+<li>Add the replacement peer to the receive set in a provisional state and send <code>RequestFlashblocks</code>.</li>
+</ol>
+<p>The provisional peer occupies a receive slot immediately, so the node still never exceeds <code>max_receive_peers</code>. While provisional, the peer is scored for missed flashblocks the same as any other receive peer. If it fails to respond or fails to deliver flashblocks, its score will deteriorate and it can be rotated out on a later interval.</p>
+<h2 id="configuration-parameters"><a class="header" href="#configuration-parameters">Configuration Parameters</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>max_send_peers</code></td><td>10</td><td>Maximum non-trusted peers to send flashblocks to</td></tr>
+<tr><td><code>max_receive_peers</code></td><td>3</td><td>Maximum peers to receive flashblocks from</td></tr>
+<tr><td><code>rotation_interval</code></td><td>30s</td><td>How often to evaluate and potentially rotate receive peers</td></tr>
+<tr><td><code>latency_window</code></td><td>1000</td><td>Number of flashblocks to track for per-peer latency averaging</td></tr>
+</tbody>
+</table>
+</div>
+<p>Trusted peers are always served on request and <strong>do not count</strong> toward <code>max_send_peers</code>.</p>
+<h2 id="interaction-with-existing-protocol"><a class="header" href="#interaction-with-existing-protocol">Interaction with Existing Protocol</a></h2>
+<h3 id="unchanged-components"><a class="header" href="#unchanged-components">Unchanged Components</a></h3>
+<p>The existing <code>Authorized</code> message types (<code>FlashblocksPayloadV1</code>, <code>StartPublish</code>, <code>StopPublish</code>) remain unchanged. They continue to use the <code>Authorized</code> wrapper with sequencer + builder signatures. The multi-builder coordination state machine (Publishing, WaitingToPublish, NotPublishing) is unaffected. <code>StartPublish</code> and <code>StopPublish</code> remain direct-neighbor messages and are not relayed.</p>
+<h3 id="required-changes-to-existing-code"><a class="header" href="#required-changes-to-existing-code">Required Changes to Existing Code</a></h3>
+<ol>
+<li>
+<p><strong>Duplicate handling must change</strong> — The current per-peer duplicate check at <code>connection.rs:278-291</code> penalizes any duplicate flashblock with <code>ReputationChangeKind::AlreadySeenTransaction</code>. In the new protocol, receiving the same flashblock from different receive peers is expected. Only same-peer duplicates (same flashblock index from the same peer twice) should trigger a penalty.</p>
+</li>
+<li>
+<p><strong>Flashblock forwarding must be scoped to send set</strong> — The current broadcast channel (<code>peer_tx</code>) sends to all connections. This must be replaced with targeted sends to only peers in the send set. The <code>PeerMsg::FlashblocksPayloadV1</code> variant currently uses a broadcast channel subscribed by all connections; this must be changed so each connection checks whether the destination peer is in the send set before forwarding.</p>
+</li>
+<li>
+<p><strong>Receive-peer selection must respect trust discovery</strong> — Nodes should not request unknown peers before their trust classification is available, otherwise untrusted peers can fill the bounded receive set before trusted peers are considered.</p>
+</li>
+<li>
+<p><strong>Protocol version bump</strong> — <code>Capability::new_static("flblk", 1)</code> at <code>handler.rs:239</code> must be updated to version <code>2</code>.</p>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="priority-blockspace-for-humans"><a class="header" href="#priority-blockspace-for-humans">Priority Blockspace for Humans</a></h1>
+<p>Priority Blockspace for Humans introduces a new transaction ordering policy on World Chain that grants verified World ID holders top-of-block priority, reducing friction and making transactions fairer for real users.</p>
+<!-- h/t to @dmarzzz for this line -->
+<p>Where <a href="https://collective.flashbots.net/t/it-s-time-to-talk-about-l2-mev/3593#p-7700-network-congestions-7">bots create congestion</a>, PBH is a highway for humans.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="pbh-architecture"><a class="header" href="#pbh-architecture">PBH Architecture</a></h1>
+<p>World Chain is an OP Stack chain that enables Priority Blockspace for Humans (PBH) through the World Chain Builder. World Chain leverages <a href="https://github.com/flashbots/rollup-boost">rollup-boost</a> to support external block production, allowing the builder to propose PBH blocks to the sequencer while remaining fully compatible with the OP Stack.</p>
+<h2 id="block-production-on-the-op-stack"><a class="header" href="#block-production-on-the-op-stack">Block Production on the OP Stack</a></h2>
+<p>The <a href="https://specs.optimism.io/protocol/exec-engine.html#engine-api">Engine API</a> defines the communication protocol between the Consensus Layer (CL) and the Execution Layer (EL) and is responsible for orchestrating block production on the OP Stack. Periodically, the sequencer’s consensus client will send a fork choice update (FCU) to its execution client, signaling for a new block to be built. After a series of API calls between the CL and EL, the EL will return a new <code>ExecutionPayload</code> containing a newly constructed block. The CL will then advance the unsafe head of the chain and peer the new block to other nodes in the network.</p>
+<pre class="mermaid">sequenceDiagram
+    box OP Stack Sequencer
+        participant sequencer-cl as Sequencer CL
+        participant sequencer-el as Sequencer EL
+    end
+    box Network
+        participant peers-cl as Peers
+    end
+
+    Note over sequencer-cl: FCU with Attributes
+    sequencer-cl-&gt;&gt;sequencer-el: engine_forkChoiceUpdatedV3(ForkChoiceState, Attrs)
+    sequencer-el--&gt;&gt;sequencer-cl: {payloadStatus: {status: VALID, ...}, payloadId: PayloadId}
+    sequencer-el-&gt;&gt;sequencer-el: Build execution payload
+    sequencer-cl-&gt;&gt;sequencer-el: engine_getPayloadV3(PayloadId)
+    sequencer-el--&gt;&gt;sequencer-cl: {executionPayload, blockValue}
+    sequencer-cl-&gt;&gt;peers-cl: Propagate new block
+
+
+</pre>
+
+<p>For a detailed look at how block production works on the OP Stack, see the <a href="https://specs.optimism.io/protocol/exec-engine.html#engine-api">OP Stack specs</a>.</p>
+<h2 id="rollup-boost"><a class="header" href="#rollup-boost">Rollup Boost</a></h2>
+<p><code>rollup-boost</code> is a block building sidecar for OP Stack chains, enabling external block production while remaining fully compatible with the OP Stack. <code>rollup-boost</code> acts as an intermediary between the sequencer’s consensus and execution client. When <code>sequencer-cl</code> sends a new FCU to <code>rollup-boost</code>, the request will be multiplexed to both the sequencer’s execution client and external block builders signaling that a new block should be built.</p>
+<p>When the sequencer is ready to propose a new block, <code>op-node</code> will send an <code>engine_getPayload</code> request to <code>rollup-boost</code> which is forwarded to the default execution client and external block builders.</p>
+<p>Once <code>rollup-boost</code> receives the built block from external builder, it will then validate the block by sending it to the sequencer’s execution client via <code>engine_newPayload</code>. If the external block is valid, it is returned to the sequencer’s <code>op-node</code>, otherwise <code>rollup-boost</code> will return the fallback block. Note that <code>rollup-boost</code> will always fallback to the default execution client’s block in the case that the external builder does not respond in time or returns an invalid block.</p>
+<pre class="mermaid">sequenceDiagram
+    box Sequencer
+        participant sequencer-cl as Sequencer CL
+        participant rollup-boost
+        participant sequencer-el as Sequencer EL
+    end
+    box Builder
+        participant builder-el as Builder EL
+    end
+
+    Note over sequencer-cl: FCU with Attributes
+    sequencer-cl-&gt;&gt;rollup-boost: engine_forkChoiceUpdatedV3(..., Attrs)
+
+    Note over rollup-boost: Forward FCU
+    rollup-boost-&gt;&gt;builder-el: engine_forkChoiceUpdatedV3(..., Attrs)
+
+    rollup-boost-&gt;&gt;sequencer-el: engine_forkChoiceUpdatedV3(..., Attrs)
+    sequencer-el--&gt;&gt;rollup-boost: {payloadId: PayloadId}
+    rollup-boost--&gt;&gt;sequencer-cl: {payloadId: PayloadId}
+
+
+    Note over sequencer-cl: Get Payload
+    sequencer-cl-&gt;&gt;rollup-boost: engine_getPayloadV3(PayloadId)
+    Note over rollup-boost: Forward Get Payload
+    rollup-boost-&gt;&gt;sequencer-el: engine_getPayloadV3(PayloadId)
+    rollup-boost-&gt;&gt;builder-el: engine_getPayloadV3(PayloadId)
+    builder-el--&gt;&gt;rollup-boost: {executionPayload, blockValue}
+    sequencer-el--&gt;&gt;rollup-boost: {executionPayload, blockValue}
+
+
+
+    Note over rollup-boost, sequencer-el: Validate builder block
+    rollup-boost-&gt;&gt;sequencer-el: engine_newPayloadV3(ExecutionPayload)
+    sequencer-el-&gt;&gt;rollup-boost: {status: VALID, ...}
+
+    Note over rollup-boost: Propose execution payload
+    rollup-boost-&gt;&gt;sequencer-cl: {executionPayload, blockValue}
+    
+    Note over sequencer-cl: Propagate new block
+</pre>
+
+<p>In addition to Engine API requests, <code>rollup-boost</code> will proxy all RPC calls from the sequencer <code>op-node</code> to its local execution client. The following RPC calls will also be forwarded to external builders:</p>
+<ul>
+<li><code>miner_*</code>
+<ul>
+<li>The Miner API is used to notify execution clients of changes in effective gas price, extra data, and DA throttling requests from the batcher.</li>
+</ul>
+</li>
+<li><code>eth_sendRawTransaction*</code>
+<ul>
+<li>Forwards transactions the sequencer receives to the builder for block building.</li>
+</ul>
+</li>
+</ul>
+ 
+<h2 id="block-production-on-world-chain"><a class="header" href="#block-production-on-world-chain">Block Production on World Chain</a></h2>
+<p>World Chain leverages <code>rollup-boost</code> to enable external block production and integrates the World Chain Builder as a block builder in the network. The World Chain Builder implements a custom block ordering policy (ie. PBH) to provide priority inclusion for transactions with a valid World ID proof. Note that the custom ordering policy adheres to the OP Stack spec.</p>
+<p>Each block has a “PBH blockspace capacity”, which determines how many PBH transactions will be included in the block. Blocks on World Chain will always reserve a percentage of blockspace for non-PBH transactions to ensure inclusion for automated systems and non-verified users. If there are not enough pending PBH transactions to fill the entirety of PBH blockspace, standard transactions will be used to fill the remainder of the block.</p>
+<br>
+<div style="display: flex; justify-content: center; gap: 40px;">
+  
+<div style="border: 1px solid white; padding: 15px; width: 250px; text-align: center; color: white;">
+    
+<div style="color: #bbbbbb; font-weight: bold; padding-bottom: 5px;">Default Block</div>
+
+    
+<table style="width: 100%; margin-top: 10px;">
+      
+<tr>
+        <th style="width: 50%; border-bottom: 1px solid white;">Tx Hash</th>
+        <th style="width: 50%; border-bottom: 1px solid white;">Fee</th>
+      </tr>
+
+      
+<tr><td>0xaaaa</td><td>$0.04</td></tr>
+
+      
+<tr><td>0xbbbb</td><td>$0.04</td></tr>
+
+      
+<tr><td>0xcccc</td><td>$0.03</td></tr>
+
+      
+<tr><td>0xdddd</td><td>$0.03</td></tr>
+
+      
+<tr><td>0xeeee</td><td>$0.03</td></tr>
+
+      
+<tr><td>0x2222</td><td>$0.02</td></tr>
+
+      
+<tr><td>0x3333</td><td>$0.02</td></tr>
+
+      
+<tr><td>0x4444</td><td>$0.02</td></tr>
+
+      
+<tr><td>0x5555</td><td>$0.01</td></tr>
+
+      
+<tr><td>0x6666</td><td>$0.01</td></tr>
+
+    </table>
+
+  </div>
+
+  
+<div style="border: 1px solid white; padding: 15px; width: 250px; text-align: center; color: white;">
+    
+<div style="color: #bbbbbb; font-weight: bold; padding-bottom: 5px;">PBH Block</div>
+
+    
+<table style="width: 100%; margin-top: 10px;">
+      
+<tr>
+        <th style="width: 50%; border-bottom: 1px solid white;">Tx Hash</th>
+        <th style="width: 50%; border-bottom: 1px solid white;">Fee</th>
+      </tr>
+
+      
+<tr style="color: #33ff33;"><td>0x3333</td><td>$0.02</td></tr>
+
+      
+<tr style="color: #33ff33;"><td>0x4444</td><td>$0.02</td></tr>
+
+      
+<tr style="color: #33ff33;"><td>0x5555</td><td>$0.01</td></tr>
+
+      
+<tr style="color: #33ff33;"><td>0x6666</td><td>$0.01</td></tr>
+
+      
+<tr><td>0xaaaa</td><td>$0.04</td></tr>
+
+      
+<tr><td>0xbbbb</td><td>$0.04</td></tr>
+
+      
+<tr><td>0xcccc</td><td>$0.03</td></tr>
+
+      
+<tr><td>0xdddd</td><td>$0.03</td></tr>
+
+      
+<tr><td>0xeeee</td><td>$0.03</td></tr>
+
+      
+<tr><td>0x2222</td><td>$0.02</td></tr>
+
+    </table>
+
+  </div>
+
+</div>
+
+<br>
+<p>If the amount of pending PBH transactions exceed the PBH blockspace capacity, the remaining PBH transactions will carry over to the next block. PBH transactions aim to provide verified users with faster, cheaper transaction inclusion, especially during network congestion. Note that transactions within PBH blockspace are ordered by priority fee.</p>
+<p>In the event that the block builder is offline, <code>rollup-boost</code> will fallback to the block built by the default execution client with standard OP Stack ordering rules.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="pbh-transactions"><a class="header" href="#pbh-transactions">PBH Transactions</a></h1>
+<p>The World Chain Builder introduces the concept of PBH transactions, which are standard OP transactions that target the <a href="https://github.com/worldcoin/world-chain/blob/main/pkg/contracts/src/PBHEntryPointImplV1.sol">PBHEntryPoint</a> and includes a <a href="#pbh-payload-1">PBHPayload</a> encoded in the tx calldata.</p>
+<!--TODO: uncomment this once the pbh sidecar is merged to main The World Chain Builder introduces the concept of PBH transactions, which are standard OP transactions that include a valid `PBHPayload` either encoded in the `WorldChainTxEnvelope` or in tx calldata and target the `PBHEntryPoint`. -->
+<!--TODO: uncomment once the pbh sidecar is merged tom main ## World Chain Tx Envelope
+The `WorldChainTxEnvelope` is an EIP-2718 transaction envelope that extends the standard `OpTxEnvelope`, optionally including a `PBHSidecar`. -->
+<h2 id="pbh-4337-userops"><a class="header" href="#pbh-4337-userops">PBH 4337 UserOps</a></h2>
+<p>The <code>PBHEntryPoint</code> contract also provides priority inclusion for 4337 <a href="https://eips.ethereum.org/EIPS/eip-4337#useroperation">UserOps</a> through PBH bundles. A PBH bundle is a standard 4337 bundle where the aggregated signature field is consists of an array of <code>PBHPayload</code>. A valid PBH bundle should include a <code>n</code> <code>PBHPayload</code>s, with each item corresponding to a <code>UserOp</code> in the bundle.</p>
+<p>When creating a PBH <code>UserOp</code>, users will append the <code>PBHPayload</code> to the <a href="https://github.com/eth-infinitism/account-abstraction/blob/ed8a5c79b50361b2f1742ee9efecd45f494df597/contracts/interfaces/PackedUserOperation.sol#L27">signature</a> field and specify the <a href="#pbh-transactions">PBHSignatureAggregator</a> as the <a href="https://github.com/eth-infinitism/account-abstraction/blob/ed8a5c79b50361b2f1742ee9efecd45f494df597/contracts/legacy/v06/IAccount06.sol#L25-L26">sigAuthorizer</a>. The <code>UserOp</code> can then be sent to a 4337 bundler that supports PBH and maintains an alt-mempool for PBH <code>UserOps</code>.</p>
+<p>The bundler will <a href="#pbh-validation">validate the PBHPayload</a>, strip the payload from the <code>userOp.signature</code> field and add it to the aggregated signature.</p>
+<pre><code class="language-solidity">    /**
+     * Aggregate multiple signatures into a single value.
+     * This method is called off-chain to calculate the signature to pass with handleOps()
+     * @param userOps              - Array of UserOperations to collect the signatures from.
+     * @return aggregatedSignature - The aggregated signature.
+     */
+    function aggregateSignatures(PackedUserOperation[] calldata userOps)
+        external
+        view
+        returns (bytes memory aggregatedSignature)
+    {
+        IPBHEntryPoint.PBHPayload[] memory pbhPayloads = new IPBHEntryPoint.PBHPayload[](userOps.length);
+        for (uint256 i = 0; i &lt; userOps.length; ++i) {
+            (, bytes memory proofData) = SafeModuleSignatures.extractProof(
+                userOps[i].signature, ISafe(payable(userOps[i].sender)).getThreshold()
+            );
+            pbhPayloads[i] = abi.decode(proofData, (IPBHEntryPoint.PBHPayload));
+        }
+        aggregatedSignature = abi.encode(pbhPayloads);
+    }
+
+</code></pre>
+<p>Upon submitting a PBH bundle to the network, the World Chain builder will ensure that all PBH bundles have valid proofs and mark the bundle for priority inclusion.</p>
+<p>Visit the <a href="#signal-hash-1">validation</a> section of the docs to see how to encode the <code>signalHash</code> for a PBH <code>UserOps</code> work, check out the <a href="https://github.com/worldcoin/world-chain/blob/main/pkg/contracts/src/PBHEntryPointImplV1.sol#L216-L250">handleAggregatedOps()</a> function and <a href="https://github.com/worldcoin/world-chain/blob/main/pkg/contracts/src/PBH4337Module.sol">PBH4337Module</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="pbh-payload-1"><a href="#pbh-payload-1" class="header">PBH Payload</a></h1>
+<h2 id="pbh-payload"><a class="header" href="#pbh-payload">PBH Payload</a></h2>
+<p>A <code>PBHPayload</code> consists of the following RLP encoded fields:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>external_nullifier</code></td><td><code>bytes</code></td><td>A unique identifier derived from the proof version, date marker, and nonce.</td></tr>
+<tr><td><code>nullifier_hash</code></td><td><code>Field</code></td><td>A cryptographic nullifier ensuring uniqueness and preventing double-signaling.</td></tr>
+<tr><td><code>root</code></td><td><code>Field</code></td><td>The Merkle root proving inclusion in the World ID set.</td></tr>
+<tr><td><code>proof</code></td><td><code>Proof</code></td><td>Semaphore proof verifying membership in the World ID set.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="external-nullifier"><a class="header" href="#external-nullifier">External Nullifier</a></h3>
+<p>The <code>external_nullifier</code> is a unique identifier used when verifying PBH transactions to prevent double-signaling and enforce PBH transaction rate limiting. For a given <code>external_nullifier</code>, the resulting <a href="https://docs.semaphore.pse.dev/glossary#nullifier">nullifier_hash</a> will be the same, meaning it can be used a unique marker for a given World ID user while maintaining all privacy preserving guarantees provided by World ID. Note that since the <code>external_nullifier</code> is different for every PBH transaction a user sends, no third party can know if two PBH transactions are from the same World ID.</p>
+<p>The <code>external_nullifier</code> is used to enforce that a World ID user can only submit <code>n</code> PBH transactions per month, with the Builder ensuring that all proofs and <code>external_nullifiers</code> are valid before a transaction is included.</p>
+<p>The <code>external_nullifier</code> is encoded as a 32-bit packed unsigned integer, with the following structure:</p>
+<ul>
+<li><strong>Version (<code>uint8</code>)</strong>: Defines the schema version.</li>
+<li><strong>Year (<code>uint16</code>)</strong>: The current year expressed as <code>yyyy</code>.</li>
+<li><strong>Month (<code>uint8</code>)</strong>: The current month expressed as (1-12).</li>
+<li><strong>PBH Nonce (<code>uint8</code>)</strong>: The PBH nonce, where <code>0 &lt;= n &lt; pbhNonceLimit</code>.</li>
+</ul>
+<p>Below is an example of how to encode and decode the <code>external_nullifier</code> for a given PBH transaction.</p>
+<pre><code class="language-solidity">uint8 public constant V1 = 1;
+
+/// @notice Encodes a PBH external nullifier using the provided year, month, and nonce.
+/// @param version An 8-bit version number (0-255) used to identify the encoding format.
+/// @param pbhNonce An 8-bit nonce value (0-255) used to uniquely identify the nullifier within a month.
+/// @param month An 8-bit 1-indexed value representing the month (1-12).
+/// @param year A 16-bit value representing the year (e.g., 2024).
+/// @return The encoded PBHExternalNullifier.
+function encode(uint8 version, uint8 pbhNonce, uint8 month, uint16 year) internal pure returns (uint256) {
+    require(month &gt; 0 &amp;&amp; month &lt; 13, InvalidExternalNullifierMonth());
+    return (uint256(year) &lt;&lt; 24) | (uint256(month) &lt;&lt; 16) | (uint256(pbhNonce) &lt;&lt; 8) | uint256(version);
+}
+
+/// @notice Decodes an encoded PBHExternalNullifier into its constituent components.
+/// @param externalNullifier The encoded external nullifier to decode.
+/// @return version The 8-bit version extracted from the external nullifier.
+/// @return pbhNonce The 8-bit nonce extracted from the external nullifier.
+/// @return month The 8-bit month extracted from the external nullifier.
+/// @return year The 16-bit year extracted from the external nullifier.
+function decode(uint256 externalNullifier)
+    internal
+    pure
+    returns (uint8 version, uint8 pbhNonce, uint8 month, uint16 year)
+{
+    year = uint16(externalNullifier &gt;&gt; 24);
+    month = uint8((externalNullifier &gt;&gt; 16) &amp; 0xFF);
+    pbhNonce = uint8((externalNullifier &gt;&gt; 8) &amp; 0xFF);
+    version = uint8(externalNullifier &amp; 0xFF);
+}
+</code></pre>
+<br>
+<p>The <strong>World Chain Builder</strong> enforces:</p>
+<ul>
+<li>The <code>external_nullifier</code> is correctly formatted and specifies the current month, year and a valid nonce.</li>
+<li>The <code>proof</code> is valid and specifies the <code>external_nullifier</code> as a public input to the proof.</li>
+<li>The <code>external_nullifier</code> has not been used before, ensuring that the <code>pbh_nonce</code> is unique for the given month and year.</li>
+</ul>
+<h3 id="signal-hash"><a class="header" href="#signal-hash">Signal Hash</a></h3>
+<p>One of the required inputs when <a href="https://docs.rs/semaphore-rs/0.3.1/semaphore_rs/protocol/fn.generate_proof.html">generating a World ID proof</a> is the <code>signal_hash</code>.
+As the name suggests, the <code>signal_hash</code> is the hash of the <a href="https://docs.semaphore.pse.dev/V2/technical-reference/circuits#signal">signal</a> which is an arbitrary message provided by the prover, allowing the verifier to hash the <code>signal</code> when verifying the proof, ensuring that the proof was generated with the expected inputs.</p>
+<p>Within the context of PBH, the <code>signal_hash</code> is used to ensure the proof was created for the transaction being submitted. Depending on the type of the PBH transaction, this value could be a hash of the tx calldata, a 4337 UserOp hash or the tx hash itself.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="pbh-validation"><a class="header" href="#pbh-validation">PBH Validation</a></h1>
+<p>Upon receiving new transactions, the World Chain Builder will first ensure that the payload is <a href="https://github.com/paradigmxyz/reth/blob/1e965caf5fa176f244a31c0d2662ba1b590938db/crates/optimism/txpool/src/validator.rs#L136-L203">a valid OP Stack tranasaction</a>. In addition to the default checks, the builder will also <a href="https://github.com/worldcoin/world-chain/blob/kit/docs/world-chain-builder/crates/world/pool/src/validator.rs#L180-L204">evaluate transactions for PBH conditions</a>.</p>
+<p>Any transaction that calls the <code>pbhMulticall()</code> or <code>handleAggregatedOps()</code> function on the <code>PBHEntyrPoint</code> will be considered a PBH transaction and must clear PBH Validation. PBH transactions must contain a valid <code>PBHPayload</code> or <code>PBHPayload[]</code> in the case of PBH 4337 bundles.</p>
+<pre><code class="language-solidity">    struct PBHPayload {
+        uint256 root;
+        uint256 pbhExternalNullifier;
+        uint256 nullifierHash;
+        uint256[8] proof;
+    }
+</code></pre>
+<h3 id="signal-hash-1"><a class="header" href="#signal-hash-1">Signal Hash</a></h3>
+<p>Transactions that target the <code>pbhMulticall()</code> function must provide a valid <code>PBHPayload</code> where included <code>proof</code> is generated with a <code>signalHash</code> specified as:</p>
+<pre><code class="language-solidity">uint256 signalHash = abi.encode(msg.sender, calls).hashToField();
+</code></pre>
+<p>Transactions that target the <code>handleAggregatedOps()</code>function (ie. PBH 4337 Bundles) must contain an aggregated signature consisting of an array of <code>PBHPayload</code> where there is a <code>PBHPayload</code> for each <code>UserOp</code> in the bundle. The included <code>proof</code> must be generated with a <code>signalHash</code> specified as:</p>
+<pre><code class="language-solidity">uint256 signalHash = abi.encodePacked(sender, userOp.nonce, userOp.callData).hashToField();
+</code></pre>
+<h3 id="external-nullifier-1"><a class="header" href="#external-nullifier-1">External Nullifier</a></h3>
+<p>PBH transactions must contain a valid external nullifier where:</p>
+<ul>
+<li>The <code>month</code> is the current month</li>
+<li>The <code>year</code> is the current year (specified as <code>yyyy</code>)</li>
+<li>The <code>pbhNonce</code> is &lt; <code>pbhNonceLimit</code>. PBH nonces are <code>0</code> indexed, meaning if the <code>pbhNonce</code> limit is <code>29</code>, a user is allotted <code>30</code> PBH transactions per month.</li>
+</ul>
+<h3 id="root"><a class="header" href="#root">Root</a></h3>
+<p>The <code>root</code> provided must be a valid <a href="https://github.com/worldcoin/world-id-contracts/blob/main/src/WorldIDIdentityManagerImplV1.sol#L67">World ID Root</a> with a timestamp less than 7 days old.</p>
+<h3 id="proof"><a class="header" href="#proof">Proof</a></h3>
+<p>The <code>proof</code> must be a valid semaphore proof, proving inclusion in the World ID set associated with the specified <code>root</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="cli-reference"><a class="header" href="#cli-reference">CLI Reference</a></h1>
+<blockquote>
+<p><strong>Auto-generated</strong> — run <code>cargo xtask docs</code> to regenerate.</p>
+</blockquote>
+<h2 id="world-chain"><a class="header" href="#world-chain"><code>world-chain</code></a></h2>
+<p>The World Chain node binary. All flags below are passed to <code>world-chain</code>.</p>
+<pre><code class="language-text">World Chain Node
+
+Usage: world-chain [OPTIONS]
+
+Options:
+  -h, --help
+          Print help (see a summary with '-h')
+
+Rollup:
+      --rollup.sequencer &lt;SEQUENCER&gt;
+          Endpoint for the sequencer mempool (can be both HTTP and WS)
+          
+          [aliases: --rollup.sequencer-http, --rollup.sequencer-ws]
+
+      --rollup.disable-tx-pool-gossip
+          Disable transaction pool gossip
+
+      --rollup.compute-pending-block
+          By default the pending block equals the latest block to save resources and not leak txs from the tx-pool, this flag enables computing of the pending block from the tx-pool instead.
+          
+          If `compute_pending_block` is not enabled, the payload builder will use the payload attributes from the latest block. Note that this flag is not yet functional.
+
+      --rollup.discovery.v4
+          enables discovery v4 if provided
+
+      --rollup.enable-tx-conditional
+          Enable transaction conditional support on sequencer
+
+      --rollup.supervisor-http &lt;SUPERVISOR_HTTP_URL&gt;
+          HTTP endpoint for the supervisor
+          
+          [default: http://localhost:1337/]
+
+      --rollup.supervisor-safety-level &lt;SUPERVISOR_SAFETY_LEVEL&gt;
+          Safety level for the supervisor
+          
+          [default: CrossUnsafe]
+
+      --rollup.sequencer-headers &lt;SEQUENCER_HEADERS&gt;
+          Optional headers to use when connecting to the sequencer
+
+      --rollup.historicalrpc &lt;HISTORICAL_HTTP_URL&gt;
+          RPC endpoint for historical data
+
+      --min-suggested-priority-fee &lt;MIN_SUGGESTED_PRIORITY_FEE&gt;
+          Minimum suggested priority fee (tip) in wei, default `1_000_000`
+          
+          [default: 1000000]
+
+      --flashblocks-url &lt;FLASHBLOCKS_URL&gt;
+          A URL pointing to a secure websocket subscription that streams out flashblocks.
+          
+          If given, the flashblocks are received to build pending block. All request with "pending" block tag will use the pending state based on flashblocks.
+
+      --flashblock-consensus
+          Enable flashblock consensus client to drive the chain forward
+          
+          When enabled, the flashblock consensus client will process flashblock sequences and submit them to the engine API to advance the chain. Requires `flashblocks_url` to be set.
+
+      --proofs-history
+          If true, initialize external-proofs exex to save and serve trie nodes to provide proofs faster
+
+      --proofs-history.storage-path &lt;PROOFS_HISTORY_STORAGE_PATH&gt;
+          The path to the storage DB for proofs history
+
+      --proofs-history.window &lt;PROOFS_HISTORY_WINDOW&gt;
+          The window to span blocks for proofs history. Value is the number of blocks. Default is 1 month of blocks based on 2 seconds block time. 30 * 24 * 60 * 60 / 2 = `1_296_000`
+          
+          [default: 1296000]
+
+      --proofs-history.prune-interval &lt;PROOFS_HISTORY_PRUNE_INTERVAL&gt;
+          Interval between proof-storage prune runs. Accepts human-friendly durations like "100s", "5m", "1h". Defaults to 15s.
+          
+          - Shorter intervals prune smaller batches more often, so each prune run tends to be faster and the blocking pause for writes is shorter, at the cost of more frequent pauses. - Longer intervals prune larger batches less often, which reduces how often pruning runs, but each run can take longer and block writes for longer.
+          
+          A shorter interval is preferred so that prune runs stay small and don’t stall writes for too long.
+          
+          CLI: `--proofs-history.prune-interval 10m`
+          
+          [default: 15s]
+
+      --proofs-history.verification-interval &lt;PROOFS_HISTORY_VERIFICATION_INTERVAL&gt;
+          Verification interval: perform full block execution every N blocks for data integrity. - 0: Disabled (Default) (always use fast path with pre-computed data from notifications) - 1: Always verify (always execute blocks, slowest) - N: Verify every Nth block (e.g., 100 = every 100 blocks)
+          
+          Periodic verification helps catch data corruption or consensus bugs while maintaining good performance.
+          
+          CLI: `--proofs-history.verification-interval 100`
+          
+          [default: 0]
+
+Priority Blockspace for Humans:
+      --pbh.verified-blockspace-capacity &lt;VERIFIED_BLOCKSPACE_CAPACITY&gt;
+          Sets the max blockspace reserved for verified transactions. If there are not enough verified transactions to fill the capacity, the remaining blockspace will be filled with unverified transactions. This arg is a percentage of the total blockspace with the default set to 70 (ie 70%)
+          
+          [default: 70]
+
+      --pbh.entrypoint &lt;ENTRYPOINT&gt;
+          Sets the ERC-4337 EntryPoint Proxy contract address This contract is used to validate 4337 PBH bundles
+          
+          [default: 0x0000000000000000000000000000000000000000]
+
+      --pbh.world-id &lt;WORLD_ID&gt;
+          Sets the WorldID contract address. This contract is used to provide the latest merkle root on chain
+          
+          [default: 0x0000000000000000000000000000000000000000]
+
+      --pbh.signature-aggregator &lt;SIGNATURE_AGGREGATOR&gt;
+          Sets the ERC0-7766 Signature Aggregator contract address This contract signifies that a given bundle should receive priority inclusion if it passes validation
+          
+          [default: 0x0000000000000000000000000000000000000000]
+
+Block Builder:
+      --builder.enabled
+          
+
+      --builder.private-key &lt;PRIVATE_KEY&gt;
+          Private key for the builder used to update PBH nullifiers
+          
+          [env: BUILDER_PRIVATE_KEY=]
+          [default: 0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef]
+
+      --builder.block-uncompressed-size-limit &lt;BLOCK_UNCOMPRESSED_SIZE_LIMIT&gt;
+          Maximum cumulative uncompressed (EIP-2718 encoded) block size in bytes
+          
+          [env: BUILDER_BLOCK_UNCOMPRESSED_SIZE_LIMIT=]
+
+Flashblocks:
+      --flashblocks.enabled
+          
+
+      --flashblocks.authorizer-vk &lt;AUTHORIZER_VK&gt;
+          Authorizer verifying key used to verify flashblock authenticity
+          
+          [env: FLASHBLOCKS_AUTHORIZER_VK=]
+
+      --flashblocks.builder-sk &lt;BUILDER_SK&gt;
+          Flashblocks signing key used to sign authorized flashblocks payloads
+          
+          [env: FLASHBLOCKS_BUILDER_SK=]
+
+      --flashblocks.override-authorizer-sk &lt;OVERRIDE_AUTHORIZER_SK&gt;
+          Override incoming authorizations from rollup boost
+          
+          [env: FLASHBLOCKS_OVERRIDE_AUTHORIZER_SK=]
+
+      --flashblocks.force-publish
+          Publish flashblocks payloads even when an authorization has not been received from rollup boost.
+          
+          This should only be used for testing and development purposes.
+          
+          [env: FLASHBLOCKS_FORCE_PUBLISH=]
+
+      --flashblocks.interval &lt;FLASHBLOCKS_INTERVAL&gt;
+          The interval to publish pre-confirmations when building a payload in milliseconds
+          
+          [env: FLASHBLOCKS_INTERVAL=]
+          [default: 200]
+
+      --flashblocks.recommit-interval &lt;RECOMMIT_INTERVAL&gt;
+          Interval at which the block builder should re-commit to the transaction pool when building a payload.
+          
+          In milliseconds.
+          
+          [env: FLASHBLOCKS_RECOMMIT_INTERVAL=]
+          [default: 200]
+
+      --flashblocks.access-list
+          Enables flashblocks access list support.
+          
+          Will create access lists when building flashblocks payloads. and will use access lists for parallel transaction execution when verifying flashblocks payloads.
+          
+          [env: FLASHBLOCKS_ACCESS_LIST=]
+
+      --flashblocks.max-send-peers &lt;MAX_SEND_PEERS&gt;
+          Override the flashblocks send-set size
+          
+          [env: FLASHBLOCKS_MAX_SEND_PEERS=]
+          [default: 10]
+
+      --flashblocks.max-receive-peers &lt;MAX_RECEIVE_PEERS&gt;
+          Override the number of receive peers maintained for flashblocks fanout
+          
+          [env: FLASHBLOCKS_MAX_RECEIVE_PEERS=]
+          [default: 3]
+
+      --flashblocks.rotation-interval &lt;ROTATION_INTERVAL&gt;
+          Override the flashblocks rotation interval in seconds
+          
+          [env: FLASHBLOCKS_ROTATION_INTERVAL=]
+          [default: 30]
+
+      --flashblocks.score-samples &lt;SCORE_SAMPLES&gt;
+          Override the number of latency samples retained for receive-peer scoring
+          
+          [env: FLASHBLOCKS_SCORE_SAMPLES=]
+          [default: 1000]
+
+      --flashblocks.force-receive-peers &lt;PEER_ID&gt;
+          Peers to always receive flashblocks from regardless of their score.
+          
+          These peers will be requested as soon as they connect and will never be evicted by rotation. They count toward `max_receive_peers`.
+          
+          [env: FLASHBLOCKS_FORCE_RECEIVE_PEERS=]
+
+      --tx-peers &lt;PEER_ID&gt;
+          Comma-separated list of peer IDs to which transactions should be propagated
+
+      --worldchain.disable-bootnodes
+          Disable the default World Chain bootnodes
+
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="development-guide"><a class="header" href="#development-guide">Development Guide</a></h1>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-c2a407aa.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="specs/static/mermaid-3a6b472a.min.js"></script>
+        <script src="specs/static/mermaid-init-025d9952.js"></script>
+        <script src="specs/static/solidity-min-a44de257.js"></script>
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+
+    </div>
+    </body>
+</html>
