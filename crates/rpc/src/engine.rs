@@ -6,17 +6,21 @@ use alloy_rpc_types_engine::{
 };
 use jsonrpsee::{proc_macros::rpc, types::ErrorObject};
 use jsonrpsee_core::{RpcResult, async_trait, server::RpcModule};
-use op_alloy_rpc_types_engine::{
-    OpExecutionData, OpExecutionPayloadV4, ProtocolVersion, SuperchainSignal,
-};
+use op_alloy_rpc_types_engine::OpExecutionPayloadV4;
 use reth_chainspec::EthereumHardforks;
 use reth_node_api::{EngineApiValidator, EngineTypes};
+use reth_optimism_node::payload::OpExecData;
 use reth_optimism_rpc::{OpEngineApi, OpEngineApiServer};
-use reth_provider::{BlockReader, HeaderProvider, StateProviderFactory};
+use reth_provider::{BalProvider, BlockReader, HeaderProvider, StateProviderFactory};
 use reth_rpc_api::IntoEngineApiRpcModule;
 use reth_transaction_pool::TransactionPool;
+use std::future::Future;
 use tracing::trace;
-use world_chain_primitives::p2p::Authorization;
+use world_chain_primitives::{
+    p2p::Authorization,
+    payload_id::{force_op_payload_id_v3, op_reth_payload_id_v4_lookup},
+};
+use world_chain_validator::coordinator::FlashblocksExecutionCoordinator;
 
 #[derive(Debug, Clone)]
 pub struct OpEngineApiExt<Provider, EngineT: EngineTypes, Pool, Validator, ChainSpec> {
@@ -24,6 +28,9 @@ pub struct OpEngineApiExt<Provider, EngineT: EngineTypes, Pool, Validator, Chain
     inner: OpEngineApi<Provider, EngineT, Pool, Validator, ChainSpec>,
     /// A (optional) watch channel notifier to the jobs generator.
     to_jobs_generator: Option<tokio::sync::watch::Sender<Option<Authorization>>>,
+    /// An (optional) handle to the [`FlashblocksExecutionCoordinator`]
+    ///  - `Some` when flashblocks is enabled, `None` otherwise.
+    pending_state: Option<FlashblocksExecutionCoordinator>,
 }
 
 impl<Provider, EngineT: EngineTypes, Pool, Validator, ChainSpec>
@@ -33,10 +40,34 @@ impl<Provider, EngineT: EngineTypes, Pool, Validator, ChainSpec>
     pub fn new(
         inner: OpEngineApi<Provider, EngineT, Pool, Validator, ChainSpec>,
         to_jobs_generator: Option<tokio::sync::watch::Sender<Option<Authorization>>>,
+        pending_state: Option<FlashblocksExecutionCoordinator>,
     ) -> Self {
         Self {
             inner,
             to_jobs_generator,
+            pending_state,
+        }
+    }
+
+    /// Starts payload validation while waiting for a matching pending flashblock to resolve.
+    async fn race_pending_payload(
+        &self,
+        block_hash: B256,
+        validate: impl Future<Output = RpcResult<PayloadStatus>>,
+    ) -> RpcResult<PayloadStatus> {
+        let Some(state) = &self.pending_state else {
+            return validate.await;
+        };
+
+        // Poll validation first: `resolve_pending` may never resolve, so it must
+        // not short-circuit before the engine is handed the payload to validate.
+        tokio::pin!(validate);
+        tokio::select! {
+            biased;
+            result = &mut validate => result,
+            // Use the event to unblock/cache the pending payload path, but still return
+            // the engine's validation result for this `newPayload` request.
+            () = state.resolve_pending(block_hash) => validate.await,
         }
     }
 }
@@ -45,8 +76,8 @@ impl<Provider, EngineT: EngineTypes, Pool, Validator, ChainSpec>
 impl<Provider, EngineT, Pool, Validator, ChainSpec> OpEngineApiServer<EngineT>
     for OpEngineApiExt<Provider, EngineT, Pool, Validator, ChainSpec>
 where
-    Provider: HeaderProvider + BlockReader + StateProviderFactory + 'static,
-    EngineT: EngineTypes<ExecutionData = OpExecutionData>,
+    Provider: HeaderProvider + BlockReader + StateProviderFactory + BalProvider + 'static,
+    EngineT: EngineTypes<ExecutionData = OpExecData>,
     Pool: TransactionPool + 'static,
     Validator: EngineApiValidator<EngineT>,
     ChainSpec: EthereumHardforks + Send + Sync + 'static,
@@ -61,10 +92,12 @@ where
         versioned_hashes: Vec<B256>,
         parent_beacon_block_root: B256,
     ) -> RpcResult<PayloadStatus> {
-        Ok(self
-            .inner
-            .new_payload_v3(payload, versioned_hashes, parent_beacon_block_root)
-            .await?)
+        let block_hash = payload.payload_inner.payload_inner.block_hash;
+        let validate =
+            self.inner
+                .new_payload_v3(payload, versioned_hashes, parent_beacon_block_root);
+
+        self.race_pending_payload(block_hash, validate).await
     }
 
     async fn new_payload_v4(
@@ -74,15 +107,14 @@ where
         parent_beacon_block_root: B256,
         execution_requests: Requests,
     ) -> RpcResult<PayloadStatus> {
-        Ok(self
-            .inner
-            .new_payload_v4(
-                payload,
-                versioned_hashes,
-                parent_beacon_block_root,
-                execution_requests,
-            )
-            .await?)
+        let block_hash = payload.payload_inner.payload_inner.payload_inner.block_hash;
+        let validate = self.inner.new_payload_v4(
+            payload,
+            versioned_hashes,
+            parent_beacon_block_root,
+            execution_requests,
+        );
+        self.race_pending_payload(block_hash, validate).await
     }
 
     async fn fork_choice_updated_v1(
@@ -116,9 +148,12 @@ where
             to_jobs_gen.send_modify(|b| *b = None)
         }
 
-        self.inner
+        let mut response = self
+            .inner
             .fork_choice_updated_v3(fork_choice_state, payload_attributes)
-            .await
+            .await?;
+        response.payload_id = response.payload_id.map(force_op_payload_id_v3);
+        Ok(response)
     }
 
     async fn get_payload_v2(
@@ -132,14 +167,30 @@ where
         &self,
         payload_id: PayloadId,
     ) -> RpcResult<EngineT::ExecutionPayloadEnvelopeV3> {
-        Ok(self.inner.get_payload_v3(payload_id).await?)
+        Ok(self
+            .inner
+            .get_payload_v3(op_reth_payload_id_v4_lookup(payload_id))
+            .await?)
     }
 
     async fn get_payload_v4(
         &self,
         payload_id: PayloadId,
     ) -> RpcResult<EngineT::ExecutionPayloadEnvelopeV4> {
-        Ok(self.inner.get_payload_v4(payload_id).await?)
+        Ok(self
+            .inner
+            .get_payload_v4(op_reth_payload_id_v4_lookup(payload_id))
+            .await?)
+    }
+
+    async fn get_payload_v5(
+        &self,
+        payload_id: PayloadId,
+    ) -> RpcResult<EngineT::ExecutionPayloadEnvelopeV5> {
+        Ok(self
+            .inner
+            .get_payload_v5(op_reth_payload_id_v4_lookup(payload_id))
+            .await?)
     }
 
     async fn get_payload_bodies_by_hash_v1(
@@ -161,10 +212,6 @@ where
             .inner
             .get_payload_bodies_by_range_v1(start, count)
             .await?)
-    }
-
-    async fn signal_superchain_v1(&self, signal: SuperchainSignal) -> RpcResult<ProtocolVersion> {
-        Ok(self.inner.signal_superchain_v1(signal).await?)
     }
 
     async fn get_client_version_v1(
@@ -214,8 +261,8 @@ pub trait FlashblocksEngineApiExt<Engine: EngineTypes> {
 impl<Provider, EngineT, Pool, Validator, ChainSpec> FlashblocksEngineApiExtServer<EngineT>
     for OpEngineApiExt<Provider, EngineT, Pool, Validator, ChainSpec>
 where
-    Provider: HeaderProvider + BlockReader + StateProviderFactory + 'static,
-    EngineT: EngineTypes<ExecutionData = OpExecutionData>,
+    Provider: HeaderProvider + BlockReader + StateProviderFactory + BalProvider + 'static,
+    EngineT: EngineTypes<ExecutionData = OpExecData>,
     Pool: TransactionPool + 'static,
     Validator: EngineApiValidator<EngineT>,
     ChainSpec: EthereumHardforks + Send + Sync + 'static,
@@ -246,8 +293,11 @@ where
             to_jobs_gen.send_modify(|b| *b = Some(a))
         }
 
-        self.inner
+        let mut response = self
+            .inner
             .fork_choice_updated_v3(fork_choice_state, payload_attributes)
-            .await
+            .await?;
+        response.payload_id = response.payload_id.map(force_op_payload_id_v3);
+        Ok(response)
     }
 }

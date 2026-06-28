@@ -3,8 +3,12 @@
 use std::time::Duration;
 
 use crate::{
+    add_ons::WorldChainAddOns,
     engine::FlashblocksEngineApiBuilder,
-    node::{WorldChainNode, WorldChainNodeComponentBuilder, WorldChainNodeContext},
+    node::{
+        WorldChainNode, WorldChainNodeComponentBuilder, WorldChainNodeContext,
+        WorldChainNodePrimitiveTypes,
+    },
     payload::FlashblocksPayloadBuilderBuilder,
     payload_service::FlashblocksPayloadServiceBuilder,
     pool::WorldChainPoolBuilder,
@@ -12,36 +16,40 @@ use crate::{
 use ed25519_dalek::VerifyingKey;
 use hex::ToHex;
 use reth_network::protocol::IntoRlpxSubProtocol;
-use reth_node_api::{FullNodeTypes, NodeTypes};
+use reth_node_api::{FullNodeTypes, NodeTypes, TxTy};
 use reth_node_builder::{
     NodeAdapter, NodeComponentsBuilder,
     components::{ComponentsBuilder, PayloadServiceBuilder},
     rpc::{BasicEngineValidatorBuilder, RpcAddOns},
 };
-use reth_optimism_evm::OpEvmConfig;
+use reth_node_core::primitives::Hardforks;
 use reth_optimism_node::{
-    OpAddOns, OpConsensusBuilder, OpEngineValidatorBuilder, OpExecutorBuilder, OpNetworkBuilder,
-    args::RollupArgs,
+    OpConsensusBuilder, OpEngineTypes, OpEngineValidatorBuilder, OpNetworkBuilder, args::RollupArgs,
 };
+use reth_optimism_primitives::OpPrimitives;
 use reth_optimism_rpc::OpEthApiBuilder;
-use world_chain_builder::coordinator::FlashblocksExecutionCoordinator;
+use world_chain_chainspec::WorldChainSpec;
 use world_chain_cli::{WorldChainArgs, WorldChainNodeConfig};
 use world_chain_p2p::{
     monitor::PeerMonitor,
-    protocol::handler::{FlashblocksHandle, FlashblocksP2PProtocol},
+    protocol::{
+        handler::{FlashblocksHandle, FlashblocksP2PProtocol},
+        recorder::FlashblocksRecorderConfig,
+    },
 };
 use world_chain_primitives::p2p::Authorization;
 use world_chain_rpc::eth::FlashblocksEthApiBuilder;
 
 use tracing::info;
 use world_chain_builder::WorldChainPayloadBuilderCtxBuilder;
+use world_chain_evm::{WorldChainEvmConfig, WorldChainExecutorBuilder};
 use world_chain_pool::BasicWorldChainPool;
+use world_chain_validator::coordinator::FlashblocksExecutionCoordinator;
 
 use crate::tx_propagation::WorldChainTransactionPropagationPolicy;
 use reth_network::PeersInfo;
 use reth_network_peers::PeerId;
 use reth_node_builder::{BuilderContext, components::NetworkBuilder};
-use reth_primitives::Hardforks;
 use reth_transaction_pool::{PoolTransaction, TransactionPool};
 
 /// Network builder for World Chain that optionally applies custom transaction propagation policy
@@ -80,11 +88,8 @@ impl WorldChainNetworkBuilder {
 impl<Node, Pool> NetworkBuilder<Node, Pool> for WorldChainNetworkBuilder
 where
     Node: FullNodeTypes<Types: NodeTypes<ChainSpec: Hardforks>>,
-    Pool: TransactionPool<
-            Transaction: PoolTransaction<
-                Consensus = <<Node::Types as NodeTypes>::Primitives as reth_node_api::NodePrimitives>::SignedTx,
-            >,
-        > + Unpin
+    Pool: TransactionPool<Transaction: PoolTransaction<Consensus = TxTy<Node::Types>>>
+        + Unpin
         + 'static,
 {
     type Network = <OpNetworkBuilder as NetworkBuilder<Node, Pool>>::Network;
@@ -102,9 +107,10 @@ where
 
         let mut network_config = op_network_builder.network_config(ctx)?;
         let local_peer_id = network_config.hello_message.id;
-        network_config.peers_config.trusted_nodes.retain(|peer| {
-            peer.id != local_peer_id
-        });
+        network_config
+            .peers_config
+            .trusted_nodes
+            .retain(|peer| peer.id != local_peer_id);
 
         let mut trusted_peer_ids: Vec<_> = network_config
             .peers_config
@@ -171,22 +177,29 @@ pub struct WorldChainDefaultContext {
     components_context: Option<FlashblocksComponentsContext>,
 }
 
+impl WorldChainNodePrimitiveTypes for WorldChainDefaultContext {
+    type Primitives = OpPrimitives;
+    type Payload = OpEngineTypes;
+    type ChainSpec = WorldChainSpec;
+}
+
 impl<N: FullNodeTypes<Types = WorldChainNode<WorldChainDefaultContext>>> WorldChainNodeContext<N>
     for WorldChainDefaultContext
 where
     FlashblocksPayloadServiceBuilder<
         FlashblocksPayloadBuilderBuilder<WorldChainPayloadBuilderCtxBuilder>,
-    >: PayloadServiceBuilder<N, BasicWorldChainPool<N>, OpEvmConfig>,
+    >: PayloadServiceBuilder<N, BasicWorldChainPool<N>, WorldChainEvmConfig>,
 {
+    type Pool = BasicWorldChainPool<N>;
     type Net = WorldChainNetworkBuilder;
-    type Evm = OpEvmConfig;
+    type Evm = WorldChainEvmConfig;
     type PayloadServiceBuilder = FlashblocksPayloadServiceBuilder<
         FlashblocksPayloadBuilderBuilder<WorldChainPayloadBuilderCtxBuilder>,
     >;
 
     type ComponentsBuilder = WorldChainNodeComponentBuilder<N, Self>;
 
-    type AddOns = OpAddOns<
+    type AddOns = WorldChainAddOns<
         NodeAdapter<N, <Self::ComponentsBuilder as NodeComponentsBuilder<N>>::Components>,
         FlashblocksEthApiBuilder,
         OpEngineValidatorBuilder,
@@ -209,6 +222,7 @@ where
                             ..
                         },
                     builder_config,
+                    ..
                 },
             components_context,
         } = self.clone();
@@ -264,7 +278,7 @@ where
                 pbh.signature_aggregator,
                 pbh.world_id,
             ))
-            .executor(OpExecutorBuilder::default())
+            .executor(WorldChainExecutorBuilder)
             .payload(FlashblocksPayloadServiceBuilder::new(
                 FlashblocksPayloadBuilderBuilder::new(
                     ctx_builder,
@@ -318,6 +332,12 @@ where
                 .components_context
                 .as_ref()
                 .map(|flashblocks_components_ctx| flashblocks_components_ctx.authorizer_vk),
+            flashblocks_state: self
+                .components_context
+                .as_ref()
+                .map(|flashblocks_components_ctx| {
+                    flashblocks_components_ctx.flashblocks_state.clone()
+                }),
         };
         let op_eth_api_builder =
             OpEthApiBuilder::default().with_sequencer(self.config.args.rollup.sequencer.clone());
@@ -340,9 +360,10 @@ where
             engine_api_builder,
             engine_validator_builder,
             Default::default(),
+            Default::default(),
         );
 
-        OpAddOns::new(
+        WorldChainAddOns::new(
             rpc_add_ons,
             self.config.builder_config.inner.da_config.clone(),
             self.config.builder_config.inner.gas_limit_config.clone(),
@@ -351,6 +372,7 @@ where
             Default::default(),
             false,
             1_000_000,
+            self.config.args.simulate_enabled,
         )
     }
 
@@ -387,6 +409,9 @@ impl From<WorldChainNodeConfig> for FlashblocksComponentsContext {
             .args
             .flashblocks
             .expect("Flashblocks args must be present");
+        let recorder_config = value
+            .flashblocks_store
+            .map(|store| FlashblocksRecorderConfig::new(store.path));
 
         let authorizer_vk = flashblocks.authorizer_vk.unwrap_or_else(|| {
             flashblocks
@@ -401,10 +426,11 @@ impl From<WorldChainNodeConfig> for FlashblocksComponentsContext {
             authorizer_vk.as_bytes().encode_hex::<String>()
         );
 
-        let flashblocks_handle = FlashblocksHandle::with_fanout_args(
+        let flashblocks_handle = FlashblocksHandle::with_fanout_args_and_recorder(
             authorizer_vk,
             flashblocks.builder_sk.clone(),
             flashblocks.fanout.clone(),
+            recorder_config,
         );
 
         let (pending_block, _) = tokio::sync::watch::channel(None);

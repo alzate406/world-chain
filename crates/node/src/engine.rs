@@ -1,19 +1,21 @@
 use alloy_rpc_types::engine::ClientVersionV1;
 use ed25519_dalek::VerifyingKey;
-use op_alloy_rpc_types_engine::OpExecutionData;
 use reth_node_api::{
     AddOnsContext, EngineApiValidator, EngineTypes, FullNodeComponents, NodeTypes,
 };
 use reth_node_builder::rpc::{EngineApiBuilder, PayloadValidatorBuilder};
-use reth_node_core::version::{CLIENT_CODE, version_metadata};
-use reth_optimism_node::OP_NAME_CLIENT;
+use reth_node_core::{
+    primitives::EthereumHardforks,
+    version::{CLIENT_CODE, version_metadata},
+};
+use reth_optimism_node::{OP_NAME_CLIENT, payload::OpExecData};
 use reth_optimism_rpc::{OP_ENGINE_CAPABILITIES, OpEngineApi};
 use reth_payload_builder::PayloadStore;
-use reth_primitives::EthereumHardforks;
 use reth_rpc_engine_api::{EngineApi, EngineCapabilities};
 use world_chain_p2p::protocol::handler::FlashblocksHandle;
 use world_chain_primitives::p2p::Authorization;
 use world_chain_rpc::engine::OpEngineApiExt;
+use world_chain_validator::coordinator::FlashblocksExecutionCoordinator;
 
 /// Builder for basic [`OpEngineApiExt`] implementation.
 pub struct FlashblocksEngineApiBuilder<EV> {
@@ -25,6 +27,8 @@ pub struct FlashblocksEngineApiBuilder<EV> {
     pub to_jobs_generator: Option<tokio::sync::watch::Sender<Option<Authorization>>>,
     /// Verifying key for authorizations.
     pub authorizer_vk: Option<VerifyingKey>,
+    /// Pending flashblocks state.
+    pub flashblocks_state: Option<FlashblocksExecutionCoordinator>,
 }
 
 impl<EV: Default> Default for FlashblocksEngineApiBuilder<EV> {
@@ -34,6 +38,7 @@ impl<EV: Default> Default for FlashblocksEngineApiBuilder<EV> {
             flashblocks_handle: None,
             to_jobs_generator: None,
             authorizer_vk: None,
+            flashblocks_state: None,
         }
     }
 }
@@ -43,7 +48,7 @@ where
     N: FullNodeComponents<
         Types: NodeTypes<
             ChainSpec: EthereumHardforks + Clone,
-            Payload: EngineTypes<ExecutionData = OpExecutionData>,
+            Payload: EngineTypes<ExecutionData = OpExecData>,
         >,
     >,
     EV: PayloadValidatorBuilder<N>,
@@ -64,6 +69,7 @@ where
         let Self {
             engine_validator_builder,
             to_jobs_generator,
+            flashblocks_state,
             ..
         } = self;
 
@@ -89,7 +95,7 @@ where
             ctx.beacon_engine_handle.clone(),
             PayloadStore::new(ctx.node.payload_builder_handle().clone()),
             ctx.node.pool().clone(),
-            Box::new(ctx.node.task_executor().clone()),
+            ctx.node.task_executor().clone(),
             client,
             capabilities,
             engine_validator,
@@ -98,7 +104,8 @@ where
         );
 
         let op_engine_api = OpEngineApi::new(inner);
-        let op_engine_api_ext = OpEngineApiExt::new(op_engine_api, to_jobs_generator);
+        let op_engine_api_ext =
+            OpEngineApiExt::new(op_engine_api, to_jobs_generator, flashblocks_state);
 
         Ok(op_engine_api_ext)
     }

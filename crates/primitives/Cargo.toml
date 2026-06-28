@@ -5,6 +5,8 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+world-chain-chainspec.workspace = true
+
 thiserror.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -12,14 +14,14 @@ eyre.workspace = true
 
 alloy-primitives = { workspace = true }
 
-reth-revm.workspace = true
-reth-payload-primitives.workspace = true
 reth-basic-payload-builder.workspace = true
+reth-chainspec.workspace = true
 reth-optimism-primitives.workspace = true
 reth-optimism-node.workspace = true
-reth-primitives.workspace = true
 reth-primitives-traits.workspace = true
 reth-optimism-chainspec.workspace = true
+reth-trie-common.workspace = true
+reth-storage-api.workspace = true
 alloy-eips.workspace = true
 alloy-eip7928.workspace = true
 alloy-consensus.workspace = true
@@ -34,6 +36,9 @@ blake3.workspace = true
 ed25519-dalek.workspace = true
 bytes.workspace = true
 chrono.workspace = true
+
+[features]
+default = []
 
 [dev-dependencies]
 alloy-signer-local.workspace = true

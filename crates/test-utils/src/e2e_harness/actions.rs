@@ -13,16 +13,16 @@ use futures::{
 use op_alloy_rpc_types::OpTransactionReceipt;
 use op_alloy_rpc_types_engine::OpExecutionPayloadEnvelopeV4;
 use reth_e2e_test_utils::testsuite::{Environment, actions::Action};
-use reth_node_api::{ConsensusEngineHandle, EngineApiMessageVersion};
-use reth_optimism_chainspec::OpChainSpec;
-use reth_optimism_node::{OpEngineTypes, OpPayloadAttributes};
+use reth_node_api::ConsensusEngineHandle;
+use reth_optimism_node::OpEngineTypes;
+use reth_optimism_payload_builder::OpPayloadAttrs;
 use reth_optimism_primitives::OpTransactionSigned;
-use reth_primitives::TransactionSigned;
 use reth_rpc_api::{EngineApiClient, EthApiClient};
 use revm_primitives::{Address, B256, Bytes, U256};
 use std::{pin::Pin, sync::Arc, time::Duration};
 use tokio::sync::mpsc;
 use tracing::{error, info};
+use world_chain_chainspec::WorldChainSpec;
 use world_chain_primitives::{
     flashblocks::{Flashblock, Flashblocks},
     p2p::Authorization,
@@ -352,7 +352,7 @@ pub struct FlashblocksValidatonStream {
     pub flashblocks_stream:
         Pin<Box<dyn Stream<Item = FlashblocksPayloadV1> + Unpin + Send + Sync + 'static>>,
     pub validation_hook: Option<Hook<PayloadStatusEnum>>,
-    pub chain_spec: Arc<OpChainSpec>,
+    pub chain_spec: Arc<WorldChainSpec>,
 }
 
 impl Action<OpEngineTypes> for FlashblocksValidatonStream {
@@ -418,11 +418,11 @@ impl Action<OpEngineTypes> for FlashblocksValidatonStream {
                     .map(|beacon_handle| {
                         let execution_data = execution_data.clone();
                         async move {
-                            beacon_handle
-                                .fork_choice_updated(forkchoice, None, EngineApiMessageVersion::V3)
-                                .await?;
+                            beacon_handle.fork_choice_updated(forkchoice, None).await?;
 
-                            let status = beacon_handle.new_payload(execution_data.clone()).await?;
+                            let status = beacon_handle
+                                .new_payload(execution_data.clone().into())
+                                .await?;
 
                             Ok::<_, eyre::Report>(status)
                         }
@@ -545,7 +545,7 @@ impl Action<OpEngineTypes> for GetReceipts {
                                 alloy_rpc_types_eth::Block,
                                 OpTransactionReceipt,
                                 Header,
-                                TransactionSigned,
+                                OpTransactionSigned,
                             >::transaction_receipt(rpc, *hash)
                             .await?;
 
@@ -606,7 +606,7 @@ impl Action<OpEngineTypes> for EthCall {
                     alloy_rpc_types_eth::Block,
                     alloy_consensus::Receipt,
                     Header,
-                    TransactionSigned,
+                    OpTransactionSigned,
                 >::call(
                     &env.node_clients[idx].rpc,
                     self.tx.clone(),
@@ -687,7 +687,7 @@ impl Action<OpEngineTypes> for GetBlockByHash {
                             alloy_rpc_types_eth::Block,
                             alloy_consensus::Receipt,
                             Header,
-                            TransactionSigned,
+                            OpTransactionSigned,
                         >::block_by_hash(
                             &env.node_clients[idx].rpc, hash, true
                         )
@@ -754,7 +754,7 @@ impl Action<OpEngineTypes> for GetCode {
                     alloy_rpc_types_eth::Block,
                     alloy_consensus::Receipt,
                     Header,
-                    TransactionSigned,
+                    OpTransactionSigned,
                 >::get_code(
                     &env.node_clients[idx].rpc,
                     self.address,
@@ -822,7 +822,7 @@ impl Action<OpEngineTypes> for GetTransactionCount {
                     alloy_rpc_types_eth::Block,
                     alloy_consensus::Receipt,
                     Header,
-                    TransactionSigned,
+                    OpTransactionSigned,
                 >::transaction_count(
                     &env.node_clients[idx].rpc,
                     self.address,
@@ -892,7 +892,7 @@ impl Action<OpEngineTypes> for GetStorage {
                     alloy_rpc_types_eth::Block,
                     alloy_consensus::Receipt,
                     Header,
-                    TransactionSigned,
+                    OpTransactionSigned,
                 >::storage_at(
                     &env.node_clients[idx].rpc,
                     self.address,
@@ -958,7 +958,7 @@ pub mod assert {
 pub struct AssertMineBlock<A> {
     pub node_idx: usize,
     pub parent_hash: Option<B256>,
-    pub attributes: OpPayloadAttributes,
+    pub attributes: OpPayloadAttrs,
     pub authorization_gen: A,
     pub block_interval: Duration,
     pub flashblocks: bool,
@@ -967,12 +967,12 @@ pub struct AssertMineBlock<A> {
 
 impl<A> AssertMineBlock<A>
 where
-    A: Fn(OpPayloadAttributes) -> Authorization + Clone + Send + Sync,
+    A: Fn(OpPayloadAttrs) -> Authorization + Clone + Send + Sync,
 {
     pub async fn new(
         node_idx: usize,
         parent_hash: Option<B256>,
-        attributes: OpPayloadAttributes,
+        attributes: OpPayloadAttrs,
         authorization_gen: A,
         block_interval: Duration,
         flashblocks: bool,
@@ -992,7 +992,7 @@ where
 
 impl<A> Action<OpEngineTypes> for AssertMineBlock<A>
 where
-    A: Fn(OpPayloadAttributes) -> Authorization + Clone + Send + Sync + 'static,
+    A: Fn(OpPayloadAttrs) -> Authorization + Clone + Send + Sync + 'static,
 {
     fn execute<'a>(
         &'a mut self,
@@ -1012,7 +1012,7 @@ where
                         alloy_rpc_types_eth::Block,
                         alloy_consensus::Receipt,
                         Header,
-                        TransactionSigned,
+                        OpTransactionSigned,
                     >::block_by_number(
                         &client.rpc, alloy_eips::BlockNumberOrTag::Latest, false
                     )
@@ -1060,7 +1060,7 @@ where
 
             tokio::time::sleep(self.block_interval).await;
             let payload =
-                EngineApiClient::<OpEngineTypes>::get_payload_v4(&engine, payload_id).await?;
+                EngineApiClient::<OpEngineTypes>::get_payload_v5(&engine, payload_id).await?;
 
             info!(
                 "Mined block {} with {} txs",
@@ -1202,7 +1202,7 @@ pub type MidBuildCallback = Box<
 /// 1. Generates payload attributes for the next block
 /// 2. Sends `forkchoiceUpdatedV3` with attributes to start building
 /// 3. Waits for `block_interval` (the build deadline)
-/// 4. Calls `getPayloadV4` to retrieve the built payload
+/// 4. Calls `getPayloadV5` to retrieve the built payload
 /// 5. Sends `newPayloadV4` + `forkchoiceUpdated` on all follower nodes
 /// 6. Invokes the optional `on_block` callback
 /// 7. Advances to the next cycle with the new block as head
@@ -1222,7 +1222,7 @@ pub struct EngineDriver<A> {
     /// Generates `Authorization` from `(parent_hash, OpPayloadAttributes)`.
     pub authorization_gen: A,
     /// Generates attributes for the next block given (block_number, parent_timestamp).
-    pub attributes_gen: Box<dyn Fn(u64, u64) -> Result<OpPayloadAttributes> + Send + Sync>,
+    pub attributes_gen: Box<dyn Fn(u64, u64) -> Result<OpPayloadAttrs> + Send + Sync>,
     /// Optional callback during the build interval (between FCU and getPayload).
     /// Called while the payload builder is actively working.
     pub during_build: Option<MidBuildCallback>,
@@ -1232,7 +1232,7 @@ pub struct EngineDriver<A> {
 
 impl<A> EngineDriver<A>
 where
-    A: Fn(B256, OpPayloadAttributes) -> Authorization + Clone + Send + Sync + 'static,
+    A: Fn(B256, OpPayloadAttrs) -> Authorization + Clone + Send + Sync + 'static,
 {
     pub fn execute<'a>(
         &'a mut self,
@@ -1253,7 +1253,7 @@ where
                         alloy_rpc_types_eth::Block,
                         alloy_consensus::Receipt,
                         Header,
-                        TransactionSigned,
+                        OpTransactionSigned,
                     >::block_by_number(
                         &builder.rpc, alloy_eips::BlockNumberOrTag::Latest, false
                     )
@@ -1325,9 +1325,9 @@ where
                     during_build(block_num).await?;
                 }
 
-                // 4. getPayloadV4
+                // 4. getPayloadV5
                 let payload =
-                    EngineApiClient::<OpEngineTypes>::get_payload_v4(&engine, payload_id).await?;
+                    EngineApiClient::<OpEngineTypes>::get_payload_v5(&engine, payload_id).await?;
 
                 let block_hash = payload
                     .execution_payload
@@ -1359,20 +1359,57 @@ where
                     OpExecutionData, OpExecutionPayload, OpExecutionPayloadSidecar,
                 };
 
-                // Canonicalize on builder via FCU only (it already has the payload)
+                let execution_data = OpExecutionData {
+                    payload: OpExecutionPayload::V4(payload.execution_payload.clone()),
+                    sidecar: OpExecutionPayloadSidecar::v4(
+                        CancunPayloadFields::new(payload.parent_beacon_block_root, vec![]),
+                        alloy_rpc_types_engine::PraguePayloadFields {
+                            requests: alloy_eips::eip7685::RequestsOrHash::Hash(
+                                alloy_eips::eip7685::EMPTY_REQUESTS_HASH,
+                            ),
+                        },
+                    ),
+                };
+
+                // Canonicalize on builder with the same Engine API sequence used by followers.
+                // `getPayload` returns the block body, but the consensus engine may still need
+                // `newPayload` before it can accept the block hash as the forkchoice head.
                 {
-                    let builder_engine = env.node_clients[self.builder_idx].engine.http_client();
+                    let beacon_handle = env.node_clients[self.builder_idx]
+                        .beacon_engine_handle
+                        .as_ref()
+                        .ok_or_else(|| {
+                            eyre!(
+                                "block {block_num}: builder {} has no beacon_engine_handle",
+                                self.builder_idx
+                            )
+                        })?;
+
+                    let status = beacon_handle
+                        .new_payload(execution_data.clone().into())
+                        .await
+                        .map_err(|e| {
+                            eyre!("block {block_num}: builder newPayload failed: {e:?}")
+                        })?;
+
+                    if !matches!(status.status, PayloadStatusEnum::Valid) {
+                        return Err(eyre!(
+                            "block {block_num}: builder newPayload invalid: {:?}",
+                            status
+                        ));
+                    }
+
                     let head_fcu = ForkchoiceState {
                         head_block_hash: block_hash,
                         safe_block_hash: block_hash,
                         finalized_block_hash: block_hash,
                     };
-                    let fcu_result = EngineApiClient::<OpEngineTypes>::fork_choice_updated_v3(
-                        &builder_engine,
-                        head_fcu,
-                        None,
-                    )
-                    .await?;
+                    let fcu_result = beacon_handle
+                        .fork_choice_updated(head_fcu, None)
+                        .await
+                        .map_err(|e| {
+                            eyre!("block {block_num}: builder FCU to head failed: {e:?}")
+                        })?;
 
                     if !matches!(fcu_result.payload_status.status, PayloadStatusEnum::Valid) {
                         return Err(eyre!(
@@ -1397,7 +1434,6 @@ where
                             .fork_choice_updated(
                                 parent_fcu,
                                 None,
-                                EngineApiMessageVersion::V3,
                             )
                             .await
                             .map_err(|e| {
@@ -1405,20 +1441,8 @@ where
                             })?;
 
                         // newPayload
-                        let execution_data = OpExecutionData {
-                            payload: OpExecutionPayload::V4(payload.execution_payload.clone()),
-                            sidecar: OpExecutionPayloadSidecar::v4(
-                                CancunPayloadFields::new(payload.parent_beacon_block_root, vec![]),
-                                alloy_rpc_types_engine::PraguePayloadFields {
-                                    requests: alloy_eips::eip7685::RequestsOrHash::Hash(
-                                        alloy_eips::eip7685::EMPTY_REQUESTS_HASH,
-                                    ),
-                                },
-                            ),
-                        };
-
                         let status = beacon_handle
-                            .new_payload(execution_data)
+                            .new_payload(execution_data.clone().into())
                             .await
                             .map_err(|e| {
                                 eyre!("block {block_num}: newPayload failed on follower {follower_idx}: {e:?}")
@@ -1441,7 +1465,6 @@ where
                             .fork_choice_updated(
                                 head_fcu,
                                 None,
-                                EngineApiMessageVersion::V3,
                             )
                             .await
                             .map_err(|e| {
@@ -1485,7 +1508,7 @@ where
 
 impl<A> Action<OpEngineTypes> for EngineDriver<A>
 where
-    A: Fn(B256, OpPayloadAttributes) -> Authorization + Clone + Send + Sync + 'static,
+    A: Fn(B256, OpPayloadAttrs) -> Authorization + Clone + Send + Sync + 'static,
 {
     fn execute<'a>(
         &'a mut self,

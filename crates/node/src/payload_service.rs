@@ -7,22 +7,21 @@ use reth_node_builder::{
     BuilderContext,
     components::{PayloadBuilderBuilder, PayloadServiceBuilder},
 };
-use reth_optimism_chainspec::OpChainSpec;
-use reth_optimism_node::{OpBuiltPayload, OpEngineTypes, OpNodeTypes, OpPayloadBuilderAttributes};
+use reth_optimism_node::{OpBuiltPayload, OpEngineTypes, OpNodeTypes, payload::OpPayloadAttrs};
 use reth_payload_builder::{PayloadBuilderHandle, PayloadBuilderService};
 use reth_provider::{
     CanonStateSubscriptions, ChainSpecProvider, DatabaseProviderFactory, HeaderProvider,
     StateProviderFactory,
 };
 use reth_transaction_pool::TransactionPool;
-use world_chain_builder::{
-    coordinator::FlashblocksExecutionCoordinator, traits::payload_builder::FlashblockPayloadBuilder,
-};
+use world_chain_builder::traits::payload_builder::FlashblockPayloadBuilder;
+use world_chain_chainspec::WorldChainSpec;
 use world_chain_p2p::protocol::handler::FlashblocksHandle;
 use world_chain_payload::generator::{
     FlashblocksJobGeneratorConfig, FlashblocksPayloadJobGenerator,
 };
 use world_chain_primitives::p2p::Authorization;
+use world_chain_validator::coordinator::FlashblocksExecutionCoordinator;
 
 /// Basic payload service builder that spawns a [`BasicPayloadJobGenerator`]
 #[derive(Debug)]
@@ -67,17 +66,15 @@ impl<Node, Pool, PB, EvmConfig> PayloadServiceBuilder<Node, Pool, EvmConfig>
 where
     Node: FullNodeTypes<Types: OpNodeTypes<Payload = OpEngineTypes>>,
     Node::Provider: StateProviderFactory
-        + ChainSpecProvider<ChainSpec = OpChainSpec>
+        + ChainSpecProvider<ChainSpec = WorldChainSpec>
         + HeaderProvider<Header = alloy_consensus::Header>
         + Clone
         + DatabaseProviderFactory<Provider: HeaderProvider<Header = alloy_consensus::Header>>,
     Node::Types: NodeTypes<
-            ChainSpec = OpChainSpec,
+            ChainSpec = WorldChainSpec,
             Payload: PayloadTypes<
                 BuiltPayload = OpBuiltPayload,
-                PayloadBuilderAttributes = OpPayloadBuilderAttributes<
-                    op_alloy_consensus::OpTxEnvelope,
-                >,
+                PayloadAttributes = OpPayloadAttrs,
             >,
         >,
     Pool: TransactionPool,

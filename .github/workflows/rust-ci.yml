@@ -12,6 +12,9 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_PROFILE_DEV_DEBUG: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
+  WORLDCHAIN_PROVIDER: "${{ secrets.WORLDCHAIN_PROVIDER }}"
 
 jobs:
   cargo-tests:
@@ -20,6 +23,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: taiki-e/install-action@just
       - uses: dtolnay/rust-toolchain@stable
+      - uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Cache
         uses: actions/cache@v5
         continue-on-error: false
@@ -67,6 +73,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rustfmt, clippy
+      - uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Cache
         uses: actions/cache@v5
         continue-on-error: false
@@ -87,6 +96,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
+      - uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Cache
         uses: actions/cache@v5
         continue-on-error: false

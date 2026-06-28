@@ -16,14 +16,18 @@ remappings = [
   "@account-abstraction/contracts/=lib/account-abstraction/contracts/",
   "@world-id-contracts/=lib/world-id-contracts/src/",
   "@BokkyPooBahsDateTimeLibrary/=lib/BokkyPooBahsDateTimeLibrary/contracts/",
-  "@pbh-lib/=src/pbh/libraries/",
+  "@pbh-lib/=src/libraries/",
   "openzeppelin-contracts/=lib/world-id-contracts/lib/openzeppelin-contracts/contracts/",
   "@4337=lib/safe-modules/modules/4337/contracts/",
   "@safe-global/safe-contracts/contracts/=lib/safe-contracts/contracts/",
+  "@base-contracts/=vendor/base-contracts/",
+  "base-contracts/=vendor/base-contracts/",
   "@forge-std/=lib/forge-std/src/",
   "forge-std/=lib/forge-std/src/",
   "@solady=lib/solady/src/utils/",
 ]
+
+[profile.ci]
 
 [fuzz]
 max_test_rejects = 150000
@@ -31,4 +35,3 @@ runs = 100
 
 [fmt]
 ignore = ["lib"]
-

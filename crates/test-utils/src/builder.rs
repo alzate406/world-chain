@@ -19,27 +19,25 @@ use alloy_trie::TrieAccount;
 use crossbeam_channel::bounded;
 use op_alloy_consensus::{OpTxEnvelope, OpTypedTransaction};
 use op_alloy_network::TxSignerSync;
+use op_revm::OpSpecId;
 use reth_chainspec::ChainInfo;
 use reth_evm::{
     ConfigureEvm, EvmEnv, EvmFactory,
     execute::{BlockBuilder, BlockBuilderOutcome},
-    op_revm::OpSpecId,
 };
-use reth_optimism_chainspec::{OpChainSpec, OpChainSpecBuilder};
-use reth_optimism_evm::{OpEvmConfig, OpNextBlockEnvAttributes, OpRethReceiptBuilder};
+use reth_optimism_evm::OpNextBlockEnvAttributes;
 use reth_optimism_primitives::{OpPrimitives, OpTransactionSigned};
-use reth_primitives::{Account, Recovered, SealedHeader, transaction::SignedTransaction};
+use reth_primitives_traits::{Account, Bytecode, Recovered, SealedHeader, SignedTransaction};
 use reth_provider::{
     BlockIdReader, BlockNumReader, BytecodeReader, CanonStateSubscriptions, ChainSpecProvider,
     HeaderProvider, NodePrimitivesProvider, ProviderResult, StateProvider, StateProviderBox,
     StateProviderFactory,
 };
 use reth_revm::{State, database::StateProviderDatabase};
-use reth_trie_common::HashedPostState;
+use reth_trie_common::{ExecutionWitnessMode, HashedPostState};
 use revm::{
     DatabaseRef,
     database::{BundleState, InMemoryDB},
-    primitives::StorageValue,
     state::AccountInfo,
 };
 use std::{
@@ -48,16 +46,16 @@ use std::{
     sync::Arc,
 };
 use tracing::error;
+use world_chain_builder::payload_builder_metrics::PayloadBuildAttemptMetrics;
+use world_chain_chainspec::{WorldChainSpec, WorldChainSpecBuilder};
+use world_chain_evm::{
+    BlockBuilderExt, OpRethReceiptBuilder, WorldChainEvmConfig,
+    execution::bal::{BalBlockBuilder, CommittedState},
+    utils::cache_prestate_from_bundle,
+};
 use world_chain_primitives::{
     access_list::{FlashblockAccessListData, access_list_hash},
     primitives::{ExecutionPayloadBaseV1, ExecutionPayloadFlashblockDeltaV1, FlashblocksPayloadV1},
-};
-
-use world_chain_builder::{
-    BlockBuilderExt,
-    bal_executor::{BalBlockBuilder, CommittedState},
-    database::bal_builder_db::BalBuilderDb,
-    payload_builder_metrics::PayloadBuildAttemptMetrics,
 };
 
 const WORLD_ID_ALT_INPUT_INTERVAL: usize = 5;
@@ -233,22 +231,23 @@ lazy_static::lazy_static! {
         .with_gas_limit(200_000_000); // 200MGas
 
     /// Chain spec for tests
-    pub static ref CHAIN_SPEC: Arc<OpChainSpec> = Arc::new(
-        OpChainSpecBuilder::default()
+    pub static ref CHAIN_SPEC: Arc<WorldChainSpec> = Arc::new(
+        WorldChainSpecBuilder::default()
             .chain(GENESIS.config.chain_id.into())
             .genesis(GENESIS.clone())
-            .isthmus_activated()
+            .karst_activated()
             .build()
     );
 
     /// EVM configuration for tests
-    pub static ref EVM_CONFIG: OpEvmConfig =
-        OpEvmConfig::new(CHAIN_SPEC.clone(), OpRethReceiptBuilder::default());
+    pub static ref EVM_CONFIG: WorldChainEvmConfig =
+        WorldChainEvmConfig::new(CHAIN_SPEC.clone(), OpRethReceiptBuilder::default());
 
     pub static ref BLOCK_EXECUTION_CTX: OpBlockExecutionCtx = OpBlockExecutionCtx {
         parent_beacon_block_root: Some(FixedBytes::ZERO),
         parent_hash: CHAIN_SPEC.genesis_hash(),
-        extra_data: bytes!("0x000000000800000002")
+        extra_data: bytes!("0x000000000800000002"),
+        ..Default::default()
     };
 
     pub static ref NEXT_BLOCK_ENV_ATTRS: OpNextBlockEnvAttributes = OpNextBlockEnvAttributes {
@@ -600,7 +599,9 @@ where
         payloads.push((
             payload,
             prev_outcome.as_ref().map(|(o, state)| CommittedState {
+                is_first: false,
                 gas_used: o.block.gas_used(),
+                blob_gas_used: o.block.blob_gas_used().unwrap_or_default(),
                 fees: U256::ZERO,
                 bundle: state.clone(),
                 receipts: o
@@ -609,13 +610,13 @@ where
                     .clone()
                     .iter()
                     .enumerate()
-                    .map(|(idx, r)| (idx as u16, r.clone()))
+                    .map(|(idx, r)| (idx as u64, r.clone()))
                     .collect(),
                 transactions: o
                     .block
                     .clone_transactions_recovered()
                     .enumerate()
-                    .map(|(idx, tx)| (idx as u16, tx.clone()))
+                    .map(|(idx, tx)| (idx as u64, tx.clone()))
                     .collect(),
             }),
         ));
@@ -675,16 +676,16 @@ where
 
     let mut state = State::builder()
         .with_database(db)
-        .with_bundle_prestate(bundle.clone())
+        .with_cached_prestate(cache_prestate_from_bundle(&bundle))
         .with_bundle_update()
+        .with_bal_builder()
         .build();
 
-    let database = BalBuilderDb::new(&mut state);
     let prev_transaction = prev_outcome
         .as_ref()
         .map(|(o, _)| o.block.clone_transactions_recovered().collect());
 
-    let evm = OpEvmFactory::default().create_evm(database, EVM_ENV.clone());
+    let evm = OpEvmFactory::default().create_evm(&mut state, EVM_ENV.clone());
 
     let mut executor = OpBlockExecutor::new(
         evm,
@@ -707,6 +708,7 @@ where
         prev_transaction.unwrap_or_default(),
         CHAIN_SPEC.clone(),
         access_list_tx,
+        bundle,
     );
 
     if prev_outcome.is_none() {
@@ -922,13 +924,13 @@ impl BytecodeReader for TestStateProvider {
     fn bytecode_by_hash(
         &self,
         code_hash: &alloy_primitives::B256,
-    ) -> reth_provider::ProviderResult<Option<reth_primitives::Bytecode>> {
+    ) -> reth_provider::ProviderResult<Option<Bytecode>> {
         use revm::DatabaseRef;
         Ok(self
             .db
             .code_by_hash_ref(*code_hash)
             .ok()
-            .map(|bc| reth_primitives::Bytecode::new_raw(bc.original_bytes())))
+            .map(|bc| Bytecode::new_raw(bc.original_bytes())))
     }
 }
 
@@ -940,27 +942,16 @@ impl StateProvider for TestStateProvider {
     ) -> reth_provider::ProviderResult<Option<alloy_primitives::StorageValue>> {
         Ok(self.db.storage_ref(account, storage_key.into()).ok())
     }
-
-    fn storage_by_hashed_key(
-        &self,
-        _address: Address,
-        _hashed_storage_key: StorageKey,
-    ) -> ProviderResult<Option<StorageValue>> {
-        todo!()
-    }
 }
 
 impl reth_provider::AccountReader for TestStateProvider {
-    fn basic_account(
-        &self,
-        address: &Address,
-    ) -> reth_provider::ProviderResult<Option<reth_primitives::Account>> {
+    fn basic_account(&self, address: &Address) -> reth_provider::ProviderResult<Option<Account>> {
         Ok(self
             .db
             .basic_ref(*address)
             .ok()
             .flatten()
-            .map(|info| reth_primitives::Account {
+            .map(|info| Account {
                 balance: info.balance,
                 nonce: info.nonce,
                 bytecode_hash: if info.code_hash == KECCAK_EMPTY {
@@ -1114,6 +1105,7 @@ impl reth_provider::StateProofProvider for TestStateProvider {
         &self,
         _input: reth_trie_common::TrieInput,
         _target: reth_trie_common::HashedPostState,
+        _mode: ExecutionWitnessMode,
     ) -> reth_provider::ProviderResult<Vec<Bytes>> {
         unimplemented!()
     }
@@ -1237,7 +1229,7 @@ impl StateProviderFactory for TestStateProvider {
 pub struct BenchProvider {
     pub inner: TestStateProvider,
     pub sealed_header: SealedHeader,
-    pub chain_spec: Arc<OpChainSpec>,
+    pub chain_spec: Arc<WorldChainSpec>,
 }
 
 impl Default for BenchProvider {
@@ -1259,10 +1251,7 @@ impl BenchProvider {
 // Delegate all TestStateProvider traits to self.inner
 
 impl BytecodeReader for BenchProvider {
-    fn bytecode_by_hash(
-        &self,
-        code_hash: &B256,
-    ) -> ProviderResult<Option<reth_primitives::Bytecode>> {
+    fn bytecode_by_hash(&self, code_hash: &B256) -> ProviderResult<Option<Bytecode>> {
         self.inner.bytecode_by_hash(code_hash)
     }
 }
@@ -1274,15 +1263,6 @@ impl StateProvider for BenchProvider {
         storage_key: StorageKey,
     ) -> ProviderResult<Option<alloy_primitives::StorageValue>> {
         self.inner.storage(account, storage_key)
-    }
-
-    fn storage_by_hashed_key(
-        &self,
-        address: Address,
-        hashed_storage_key: StorageKey,
-    ) -> ProviderResult<Option<StorageValue>> {
-        self.inner
-            .storage_by_hashed_key(address, hashed_storage_key)
     }
 }
 
@@ -1381,8 +1361,9 @@ impl reth_provider::StateProofProvider for BenchProvider {
         &self,
         input: reth_trie_common::TrieInput,
         target: reth_trie_common::HashedPostState,
+        mode: ExecutionWitnessMode,
     ) -> ProviderResult<Vec<Bytes>> {
-        self.inner.witness(input, target)
+        self.inner.witness(input, target, mode)
     }
 }
 
@@ -1530,9 +1511,9 @@ impl HeaderProvider for BenchProvider {
 
 // ChainSpecProvider — returns the test chain spec
 impl ChainSpecProvider for BenchProvider {
-    type ChainSpec = OpChainSpec;
+    type ChainSpec = WorldChainSpec;
 
-    fn chain_spec(&self) -> Arc<OpChainSpec> {
+    fn chain_spec(&self) -> Arc<WorldChainSpec> {
         self.chain_spec.clone()
     }
 }

@@ -1,6 +1,5 @@
 use crate::{
     payload_builder_metrics::{PayloadBuildRejectionReason, PayloadBuildTaskOutcome},
-    state_db::StateDB,
     traits::{context::PayloadBuilderCtx, context_builder::PayloadBuilderCtxBuilder},
 };
 use alloy_consensus::{Block, SignableTransaction, Transaction, transaction::SignerRecoverable};
@@ -13,19 +12,17 @@ use op_alloy_consensus::EIP1559ParamError;
 use op_alloy_rpc_types::OpTransactionRequest;
 
 use alloy_rpc_types_engine::PayloadId;
+use op_revm::{L1BlockInfo, OpSpecId, constants::L1_BLOCK_CONTRACT};
 use reth_basic_payload_builder::PayloadConfig;
-use reth_chainspec::EthChainSpec;
 use reth_evm::{
-    ConfigureEvm, Database, Evm, EvmEnv,
+    ConfigureEvm, Database as RethDatabase, Evm, EvmEnv,
     block::{BlockExecutionError, BlockValidationError},
     execute::{BlockBuilder, BlockExecutor},
-    op_revm::OpSpecId,
 };
-use reth_node_api::{PayloadBuilderAttributes, PayloadBuilderError};
-use reth_optimism_chainspec::OpChainSpec;
+use reth_node_api::PayloadBuilderError;
 use reth_optimism_forks::OpHardforks;
 use reth_optimism_node::{
-    OpBuiltPayload, OpEvmConfig, OpNextBlockEnvAttributes, OpPayloadBuilderAttributes,
+    OpBuiltPayload, OpNextBlockEnvAttributes, OpPayloadBuilderAttributes,
     txpool::estimated_da_size::DataAvailabilitySized,
 };
 use reth_optimism_payload_builder::{
@@ -33,16 +30,19 @@ use reth_optimism_payload_builder::{
     config::OpBuilderConfig,
 };
 use reth_optimism_primitives::OpTransactionSigned;
+use reth_payload_primitives::BuildNextEnv;
 use reth_payload_util::PayloadTransactions;
-use reth_primitives::{NodePrimitives, Recovered, SealedHeader, TxTy};
+use reth_primitives_traits::{HeaderTy, Recovered, SealedHeader, TxTy};
 use reth_provider::{BlockReaderIdExt, ChainSpecProvider, StateProviderFactory};
 use reth_revm::cancelled::CancelOnDrop;
 use reth_transaction_pool::{BestTransactionsAttributes, PoolTransaction, TransactionPool};
-use revm::{DatabaseCommit, context::BlockEnv};
+use revm::{Database as RevmDatabase, context::BlockEnv};
 use revm_database::State;
 use semaphore_rs::Field;
 use std::{collections::HashSet, fmt::Debug, sync::Arc, time::Instant};
 use tracing::{error, trace};
+use world_chain_chainspec::WorldChainSpec;
+use world_chain_evm::{WorldChainEvmConfig, utils::estimated_da_size_bytes};
 use world_chain_pool::{
     bindings::IPBHEntryPoint::spendNullifierHashesCall,
     tx::{WorldChainPoolTransaction, WorldChainPooledTransaction},
@@ -51,7 +51,8 @@ use world_chain_pool::{
 /// Container type that holds all necessities to build a new payload.
 #[derive(Debug, Clone)]
 pub struct WorldChainPayloadBuilderCtx<Client: ChainSpecProvider> {
-    pub inner: Arc<OpPayloadBuilderCtx<OpEvmConfig, <Client as ChainSpecProvider>::ChainSpec>>,
+    pub inner:
+        Arc<OpPayloadBuilderCtx<WorldChainEvmConfig, <Client as ChainSpecProvider>::ChainSpec>>,
     pub verified_blockspace_capacity: u8,
     pub pbh_entry_point: Address,
     pub pbh_signature_aggregator: Address,
@@ -82,12 +83,13 @@ where
         info: &mut ExecutionInfo,
         base_fee: u64,
         gas_used: u64,
+        tx_da_size: u64,
         tx: Recovered<OpTransactionSigned>,
     ) {
         // add gas used by the transaction to cumulative gas used, before creating the
         // receipt
         info.cumulative_gas_used += gas_used;
-        info.cumulative_da_bytes_used += tx.network_len() as u64;
+        info.cumulative_da_bytes_used += tx_da_size;
 
         // update add to total fees
         let miner_fee = tx
@@ -104,7 +106,7 @@ where
         + ChainSpecProvider<ChainSpec: OpHardforks>
         + Clone,
 {
-    type Evm = OpEvmConfig;
+    type Evm = WorldChainEvmConfig;
     type ChainSpec = <Client as ChainSpecProvider>::ChainSpec;
     type Transaction = WorldChainPooledTransaction;
 
@@ -163,34 +165,13 @@ where
     >
     where
         DB::Error: Send + Sync + 'static,
-        DB: Database + 'a,
+        DB: RethDatabase + 'a,
     {
-        // Prepare attributes for next block environment.
-        let gas_limit = self
-            .inner
-            .attributes()
-            .gas_limit
-            .unwrap_or(self.inner.parent().gas_limit);
-        let attributes = OpNextBlockEnvAttributes {
-            timestamp: self.inner.attributes().timestamp(),
-            suggested_fee_recipient: self.inner.attributes().suggested_fee_recipient(),
-            prev_randao: self.inner.attributes().prev_randao(),
-            gas_limit,
-            parent_beacon_block_root: self.inner.attributes().parent_beacon_block_root(),
-            extra_data: if self
-                .spec()
-                .is_holocene_active_at_timestamp(self.attributes().timestamp())
-            {
-                self.attributes()
-                    .get_holocene_extra_data(
-                        self.spec()
-                            .base_fee_params_at_timestamp(self.attributes().timestamp()),
-                    )
-                    .map_err(PayloadBuilderError::other)?
-            } else {
-                Default::default()
-            }, // TODO: FIXME: Double check this against op-reth
-        };
+        let attributes = OpNextBlockEnvAttributes::build_next_env(
+            self.inner.attributes(),
+            self.inner.parent(),
+            self.spec(),
+        )?;
 
         // Prepare EVM environment.
         let evm_env = self
@@ -220,10 +201,10 @@ where
         &self,
         builder: &mut impl BlockBuilder<
             Primitives = <Self::Evm as ConfigureEvm>::Primitives,
-            Executor: BlockExecutor<Evm: Evm<DB: StateDB + DatabaseCommit + reth_evm::Database>>,
+            Executor: BlockExecutor<Evm: Evm<DB: reth_evm::block::StateDB + reth_evm::Database>>,
         >,
     ) -> Result<ExecutionInfo, PayloadBuilderError> {
-        self.inner.execute_sequencer_transactions(builder)
+        self.inner.execute_sequencer_transactions(builder, None)
     }
 
     /// Executes the given best transactions and updates the execution info.
@@ -245,7 +226,7 @@ where
                 Primitives = <Self::Evm as ConfigureEvm>::Primitives,
                 Executor: BlockExecutor<
                     Evm: Evm<
-                        DB: StateDB + DatabaseCommit + reth_evm::Database,
+                        DB: reth_evm::block::StateDB + reth_evm::Database,
                         BlockEnv = BlockEnv,
                     >,
                 >,
@@ -257,6 +238,20 @@ where
         let block_da_limit = self.inner.builder_config.da_config.max_da_block_size();
         let tx_da_limit = self.inner.builder_config.da_config.max_da_tx_size();
         let base_fee = builder.evm_mut().block().basefee;
+        let da_footprint_gas_scalar = if self
+            .spec()
+            .is_jovian_active_at_timestamp(self.attributes().timestamp)
+        {
+            let db = builder.evm_mut().db_mut();
+            db.basic(L1_BLOCK_CONTRACT)
+                .map_err(PayloadBuilderError::other)?;
+            Some(
+                L1BlockInfo::fetch_da_footprint_gas_scalar(db)
+                    .map_err(PayloadBuilderError::other)?,
+            )
+        } else {
+            None
+        };
         let mut transactions_considered = 0;
         let mut transactions_executed = 0;
         let mut invalid_txs = vec![];
@@ -298,27 +293,15 @@ where
                 tx_da_limit,
                 block_da_limit,
                 tx.gas_limit(),
-                None, // TODO: related to Jovian
+                da_footprint_gas_scalar,
+                tx_uncompressed_size,
+                self.block_uncompressed_size_limit,
             ) {
                 attempt_metrics.increment_rejection(PayloadBuildRejectionReason::OverLimits);
                 // we can't fit this transaction into the block, so we need to mark it as
                 // invalid which also removes all dependent transaction from
                 // the iterator before we can continue
                 best_txs.mark_invalid(tx.signer(), tx.nonce());
-                continue;
-            }
-
-            if let Some(conditional_options) = pooled_tx.conditional_options()
-                && world_chain_rpc::transactions::validate_conditional_options(
-                    conditional_options,
-                    &self.client,
-                )
-                .is_err()
-            {
-                attempt_metrics
-                    .increment_rejection(PayloadBuildRejectionReason::ConditionalInvalid);
-                best_txs.mark_invalid(tx.signer(), tx.nonce());
-                invalid_txs.push(*pooled_tx.hash());
                 continue;
             }
 
@@ -401,9 +384,10 @@ where
                 }
             };
 
+            let gas_used = gas_used.tx_gas_used();
             attempt_metrics.record_transaction_gas_used(gas_used);
             transactions_executed += 1;
-            self.commit_changes(info, base_fee, gas_used, tx);
+            self.commit_changes(info, base_fee, gas_used, tx_da_size, tx);
         }
 
         if !spent_nullifier_hashes.is_empty() {
@@ -427,7 +411,9 @@ where
             // is not spent rather than sitting in the default execution client's mempool.
             match builder.execute_transaction(tx.clone()) {
                 Ok(gas_used) => {
-                    self.commit_changes(info, base_fee, gas_used, tx);
+                    let gas_used = gas_used.tx_gas_used();
+                    let tx_da_size = estimated_da_size_bytes(&tx);
+                    self.commit_changes(info, base_fee, gas_used, tx_da_size, tx);
                     attempt_metrics
                         .record_spend_nullifiers_outcome(PayloadBuildTaskOutcome::Success);
                 }
@@ -453,11 +439,11 @@ where
     }
 }
 
-impl<Provider> PayloadBuilderCtxBuilder<Provider, OpEvmConfig, OpChainSpec>
+impl<Provider> PayloadBuilderCtxBuilder<Provider, WorldChainEvmConfig, WorldChainSpec>
     for WorldChainPayloadBuilderCtxBuilder
 where
     Provider: StateProviderFactory
-        + ChainSpecProvider<ChainSpec = OpChainSpec>
+        + ChainSpecProvider<ChainSpec = WorldChainSpec>
         + Send
         + Sync
         + BlockReaderIdExt<Block = Block<OpTransactionSigned>>
@@ -468,16 +454,14 @@ where
     fn build(
         &self,
         provider: Provider,
-        evm_config: OpEvmConfig,
+        evm_config: WorldChainEvmConfig,
         builder_config: OpBuilderConfig,
         config: PayloadConfig<
-            OpPayloadBuilderAttributes<
-                <<OpEvmConfig as ConfigureEvm>::Primitives as NodePrimitives>::SignedTx,
-            >,
-            <<OpEvmConfig as ConfigureEvm>::Primitives as NodePrimitives>::BlockHeader,
+            OpPayloadBuilderAttributes<TxTy<<WorldChainEvmConfig as ConfigureEvm>::Primitives>>,
+            HeaderTy<<WorldChainEvmConfig as ConfigureEvm>::Primitives>,
         >,
         cancel: &CancelOnDrop,
-        best_payload: Option<OpBuiltPayload<<OpEvmConfig as ConfigureEvm>::Primitives>>,
+        best_payload: Option<OpBuiltPayload<<WorldChainEvmConfig as ConfigureEvm>::Primitives>>,
     ) -> Self::PayloadBuilderCtx
     where
         Self: Sized,

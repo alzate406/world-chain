@@ -1,12 +1,4 @@
 //! World Chain transaction pool types
-use std::{
-    collections::HashSet,
-    sync::{
-        Arc,
-        atomic::{AtomicU16, AtomicU64, Ordering},
-    },
-};
-
 use super::{root::WorldChainRootValidator, tx::WorldChainPoolTransaction};
 use crate::{
     bindings::{IPBHEntryPoint, IPBHEntryPoint::PBHPayload},
@@ -20,14 +12,20 @@ use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, ParallelIterato
 use reth_evm::ConfigureEvm;
 use reth_optimism_forks::OpHardforks;
 use reth_optimism_node::txpool::OpTransactionValidator;
-use reth_optimism_primitives::OpTransactionSigned;
-use reth_primitives::{Block, NodePrimitives, SealedBlock};
+use reth_primitives_traits::{BlockTy, SealedBlock, TxTy};
 use reth_provider::{BlockReaderIdExt, ChainSpecProvider, StateProviderFactory};
 use reth_transaction_pool::{
     TransactionOrigin, TransactionValidationOutcome, TransactionValidator,
     validate::ValidTransaction,
 };
 use revm_primitives::U256;
+use std::{
+    collections::HashSet,
+    sync::{
+        Arc,
+        atomic::{AtomicU16, AtomicU64, Ordering},
+    },
+};
 use tracing::info;
 use world_chain_pbh::payload::{PBHPayload as PbhPayload, PBHValidationError};
 
@@ -67,8 +65,8 @@ impl<Client, Tx, Evm> WorldChainTransactionValidator<Client, Tx, Evm>
 where
     Client: ChainSpecProvider<ChainSpec: OpHardforks>
         + StateProviderFactory
-        + BlockReaderIdExt<Block = reth_primitives::Block<OpTransactionSigned>>,
-    Tx: WorldChainPoolTransaction,
+        + BlockReaderIdExt<Block = BlockTy<Evm::Primitives>>,
+    Tx: WorldChainPoolTransaction<Consensus = TxTy<Evm::Primitives>>,
     Evm: ConfigureEvm,
 {
     /// Create a new [`WorldChainTransactionValidator`].
@@ -260,13 +258,13 @@ impl<Client, Tx, Evm> TransactionValidator for WorldChainTransactionValidator<Cl
 where
     Client: ChainSpecProvider<ChainSpec: OpHardforks>
         + StateProviderFactory
-        + BlockReaderIdExt<Block = Block<OpTransactionSigned>>,
-    Tx: WorldChainPoolTransaction<Consensus = OpTransactionSigned>,
+        + BlockReaderIdExt<Block = BlockTy<Evm::Primitives>>,
+    Tx: WorldChainPoolTransaction<Consensus = TxTy<Evm::Primitives>>,
     Evm: ConfigureEvm,
 {
     type Transaction = Tx;
 
-    type Block = <Evm::Primitives as NodePrimitives>::Block;
+    type Block = BlockTy<Evm::Primitives>;
 
     async fn validate_transaction(
         &self,
@@ -309,15 +307,15 @@ where
 
 #[cfg(test)]
 pub mod tests {
-    use alloy_consensus::{Block, Header};
+    use alloy_consensus::{Block, BlockBody, Header};
     use alloy_primitives::{Address, address};
     use alloy_sol_types::SolCall;
-    use reth_optimism_node::OpEvmConfig;
     use reth_optimism_primitives::OpTransactionSigned;
-    use reth_primitives::{BlockBody, SealedBlock};
+    use reth_primitives_traits::SealedBlock;
     use reth_transaction_pool::{
         Pool, TransactionPool, TransactionValidator, blobstore::InMemoryBlobStore,
     };
+    use world_chain_evm::WorldChainEvmConfig;
     use world_chain_pbh::{date_marker::DateMarker, external_nullifier::ExternalNullifier};
     use world_chain_test_utils::{
         PBH_DEV_ENTRYPOINT,
@@ -338,8 +336,11 @@ pub mod tests {
     const PBH_DEV_SIGNATURE_AGGREGATOR: Address =
         address!("Cf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9");
 
-    type TestValidator =
-        WorldChainTransactionValidator<MockEthProvider, WorldChainPooledTransaction, OpEvmConfig>;
+    type TestValidator = WorldChainTransactionValidator<
+        MockEthProvider,
+        WorldChainPooledTransaction,
+        WorldChainEvmConfig,
+    >;
 
     /// Create a World Chain validator for testing
     fn world_chain_validator() -> TestValidator {
@@ -361,7 +362,7 @@ pub mod tests {
                 body: Default::default(),
             },
         );
-        let evm = OpEvmConfig::optimism(client.chain_spec.clone());
+        let evm = WorldChainEvmConfig::optimism(client.chain_spec.clone());
 
         let validator = EthTransactionValidatorBuilder::new(client.clone(), evm)
             .no_shanghai()
