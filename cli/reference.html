@@ -15,8 +15,8 @@
         <link rel="icon" href="../favicon-de23e50b.svg">
         <link rel="shortcut icon" href="../favicon-8114d1fc.png">
         <link rel="stylesheet" href="../css/variables-8adf115d.css">
-        <link rel="stylesheet" href="../css/general-2459343d.css">
-        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/general-0392ca55.css">
+        <link rel="stylesheet" href="../css/chrome-fc474251.css">
         <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -29,16 +29,18 @@
 
         <!-- Custom theme stylesheets -->
 
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
         <!-- Provide site root and default themes to javascript -->
         <script>
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-287d2014.js";
+            window.path_to_searchindex_js = "../searchindex-25cdab43.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-9878744d.js"></script>
+        <script src="../toc-a26f203c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -208,13 +210,18 @@ Rollup:
       --rollup.enable-tx-conditional
           Enable transaction conditional support on sequencer
 
-      --rollup.supervisor-http &lt;SUPERVISOR_HTTP_URL&gt;
-          HTTP endpoint for the supervisor
-          
-          [default: http://localhost:1337/]
+      --rollup.interop-http &lt;INTEROP_HTTP_URL&gt;
+          HTTP endpoint(s) for the interop filter, used to validate the interop messages referenced by incoming transactions. Repeat the flag to configure multiple endpoints; each check is fanned out to all of them and combined by quorum agreement (see `--rollup.interop-min-responses`). When none are set, interop transaction validation is disabled: a node that builds blocks will then include transactions carrying invalid interop messages, producing invalid blocks. It is only safe to leave this unset on nodes that do not build blocks
 
-      --rollup.supervisor-safety-level &lt;SUPERVISOR_SAFETY_LEVEL&gt;
-          Safety level for the supervisor
+      --rollup.interop-min-responses &lt;INTEROP_MIN_RESPONSES&gt;
+          Minimum number of definitive verdicts required to decide an interop check across the configured `--rollup.interop-http` endpoints. A transaction is accepted only when this many endpoints return a definitive verdict and all of them agree it is valid; if they disagree the transaction is rejected.
+          
+          Defaults to the number of endpoints (unanimity, fail-closed). Note this means any single unreachable or out-of-sync endpoint blocks ALL interop admission until it recovers, so adding endpoints under the default REDUCES availability. Set a majority quorum (e.g. N/2+1) to tolerate a degraded endpoint while still only accepting on unanimous agreement among responders.
+          
+          Disagreement detection is best-effort: once the quorum is reached the remaining endpoints are not awaited, so a slow dissenter beyond the quorum may go unseen.
+
+      --rollup.interop-safety-level &lt;INTEROP_SAFETY_LEVEL&gt;
+          Safety level for interop filter validation
           
           [default: CrossUnsafe]
 
@@ -228,6 +235,11 @@ Rollup:
           Minimum suggested priority fee (tip) in wei, default `1_000_000`
           
           [default: 1000000]
+
+      --rollup.max-uncompressed-block-size &lt;MAX_UNCOMPRESSED_BLOCK_SIZE&gt;
+          Maximum cumulative uncompressed (EIP-2718 encoded) block size in bytes.
+          
+          When set, the payload builder stops including mempool transactions once the block's total uncompressed transaction size would exceed this value. This bounds the size of the `engine_getPayload` response so it stays within the limits assumed by consensus-layer clients (e.g. the common 10 MiB JSON payload cap). Unset means no limit.
 
       --flashblocks-url &lt;FLASHBLOCKS_URL&gt;
           A URL pointing to a secure websocket subscription that streams out flashblocks.
@@ -243,23 +255,21 @@ Rollup:
           If true, initialize external-proofs exex to save and serve trie nodes to provide proofs faster
 
       --proofs-history.storage-path &lt;PROOFS_HISTORY_STORAGE_PATH&gt;
-          The path to the storage DB for proofs history
+          Path to the proofs-history storage DB. Defaults to `&lt;reth-data-dir&gt;/historical-proofs` (chain-namespaced via reth's `--datadir`)
+
+      --proofs-history.storage-version &lt;PROOFS_HISTORY_STORAGE_VERSION&gt;
+          Storage schema version. Must match the version used when starting the node
+
+          Possible values:
+          - v1: V1 storage schema (original single-table-per-domain layout). Default
+          - v2: V2 storage schema with changeset and history-bitmap tables, enabling history-aware reads at any block number within the proof window
+          
+          [default: v1]
 
       --proofs-history.window &lt;PROOFS_HISTORY_WINDOW&gt;
-          The window to span blocks for proofs history. Value is the number of blocks. Default is 1 month of blocks based on 2 seconds block time. 30 * 24 * 60 * 60 / 2 = `1_296_000`
+          The window to span blocks for proofs history. Value is the number of blocks. Default is 1 month of blocks based on 2 seconds block time (`30 * 24 * 60 * 60 / 2 = 1_296_000`)
           
           [default: 1296000]
-
-      --proofs-history.prune-interval &lt;PROOFS_HISTORY_PRUNE_INTERVAL&gt;
-          Interval between proof-storage prune runs. Accepts human-friendly durations like "100s", "5m", "1h". Defaults to 15s.
-          
-          - Shorter intervals prune smaller batches more often, so each prune run tends to be faster and the blocking pause for writes is shorter, at the cost of more frequent pauses. - Longer intervals prune larger batches less often, which reduces how often pruning runs, but each run can take longer and block writes for longer.
-          
-          A shorter interval is preferred so that prune runs stay small and don’t stall writes for too long.
-          
-          CLI: `--proofs-history.prune-interval 10m`
-          
-          [default: 15s]
 
       --proofs-history.verification-interval &lt;PROOFS_HISTORY_VERIFICATION_INTERVAL&gt;
           Verification interval: perform full block execution every N blocks for data integrity. - 0: Disabled (Default) (always use fast path with pre-computed data from notifications) - 1: Always verify (always execute blocks, slowest) - N: Verify every Nth block (e.g., 100 = every 100 blocks)
@@ -353,6 +363,18 @@ Flashblocks:
           
           [env: FLASHBLOCKS_ACCESS_LIST=]
 
+      --flashblocks.store
+          Store accepted flashblocks to a separate libmdbx database
+          
+          [env: FLASHBLOCKS_STORE=]
+
+      --flashblocks.store-path &lt;STORE_PATH&gt;
+          Path to the libmdbx database directory used by --flashblocks.store.
+          
+          Defaults to &lt;datadir&gt;/flashblocks/flashblocks.mdbx.
+          
+          [env: FLASHBLOCKS_STORE_PATH=]
+
       --flashblocks.max-send-peers &lt;MAX_SEND_PEERS&gt;
           Override the flashblocks send-set size
           
@@ -400,7 +422,7 @@ Flashblocks:
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../development.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../wips/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -414,7 +436,7 @@ Flashblocks:
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../development.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../wips/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
@@ -436,11 +458,11 @@ Flashblocks:
 
         <script src="../elasticlunr-ef4e11c1.min.js"></script>
         <script src="../mark-09e88c2c.min.js"></script>
-        <script src="../searcher-c2a407aa.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
 
         <script src="../clipboard-1626706a.min.js"></script>
         <script src="../highlight-abc7f01d.js"></script>
-        <script src="../book-a0b12cfe.js"></script>
+        <script src="../book-c22b7243.js"></script>
 
         <!-- Custom JS scripts -->
         <script src="../specs/static/mermaid-3a6b472a.min.js"></script>

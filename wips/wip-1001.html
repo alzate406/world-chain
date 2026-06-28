@@ -1,0 +1,805 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>WIP-1001: WorldID Native Account Abstraction - World Chain Specs</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-0392ca55.css">
+        <link rel="stylesheet" href="../css/chrome-fc474251.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-25cdab43.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-a26f203c.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">World Chain Specs</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h2 id="abstract"><a class="header" href="#abstract">Abstract</a></h2>
+<p>We define a native World Chain account type managed by the <code>WORLD_CHAIN_ACCOUNT_MANAGER</code> predeploy. Each account has one immutable <a href="https://eips.ethereum.org/EIPS/eip-1271">EIP-1271</a> compliant admin signer and one active key ring of session verifier instances backed by <a href="https://eips.ethereum.org/EIPS/eip-1271">EIP-1271</a> compliant verifier implementations.</p>
+<p>We extend <a href="https://eips.ethereum.org/EIPS/eip-2718">EIP-2718</a> with a new typed transaction envelope with type flag <code>0x1D</code>. <code>0x1D</code> transactions are executed with the World Chain account <em>framed</em> as the sender. Session verifier instances act as the transaction level signatories via programmable <a href="https://eips.ethereum.org/EIPS/eip-1271">EIP-1271</a> smart contracts. Session verifier implementations dually function as signature verifiers, and session key policy evaluators.</p>
+<p>We design with the principle of not defining signer-specific authentication as native execution paths. Signature schemes, proof systems, recovery policies, and spending policies are fully programmable. The protocol only prescribes deterministic transaction context, validation frames, and reusable precompiles for cryptographic operations.</p>
+<h2 id="motivation"><a class="header" href="#motivation">Motivation</a></h2>
+<p>World Chain accounts need programmable authentication without adding a protocol branch for every signature scheme, or session key policy. Smart contracts allow us to converge protocol level authentication over a single authorization boundary with determinism enforced via protocol level restrictions on programmable validation frames.</p>
+<p>Programmable policies over Session Keys unlock many capabilities that simply are not possible on traditional accounts. Some examples include account subscription models, delegated agent payments with scoped permissions enforced by the VM, social recovery, policy based authentication (e.g. Multi Factor authentication for high value transactions). World Chain accounts are unique in that the policies constraining a Session Key are fully programmable. This allows for expressive policies, and authentication strategies to be composed and updated dynamically without prescriptive standards enforced by the protocol.</p>
+<h2 id="specification"><a class="header" href="#specification">Specification</a></h2>
+<p>The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL NOT”, “SHOULD”, “SHOULD NOT”, “RECOMMENDED”, “NOT RECOMMENDED”, “MAY”, and “OPTIONAL” in this document are to be interpreted as described in <a href="https://www.rfc-editor.org/rfc/rfc2119">RFC 2119</a> and <a href="https://www.rfc-editor.org/rfc/rfc8174">RFC 8174</a>.</p>
+<h3 id="protocol-constants"><a class="header" href="#protocol-constants">Protocol Constants</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Name</th><th>Type</th><th>Value</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>WORLD_TX_TYPE</code></td><td><code>uint8</code></td><td><code>0x1D</code></td><td>EIP-2718 transaction type for World Chain account transactions.</td></tr>
+<tr><td><code>MAX_SESSION_VERIFIERS</code></td><td><code>uint256</code></td><td><code>20</code></td><td>Maximum active session verifier instances per account.</td></tr>
+<tr><td><code>WORLD_CHAIN_ACCOUNT_DOMAIN</code></td><td><code>bytes32</code></td><td><code>keccak256("WIP1001_ACCOUNT")</code></td><td>Domain for account address derivation.</td></tr>
+<tr><td><code>WORLD_CHAIN_ACCOUNT_CREATE_DOMAIN</code></td><td><code>bytes32</code></td><td><code>keccak256("WORLD_CHAIN_ACCOUNT_CREATE")</code></td><td>Domain for account creation authorization.</td></tr>
+<tr><td><code>WORLD_CHAIN_ACCOUNT_SET_DOMAIN</code></td><td><code>bytes32</code></td><td><code>keccak256("WORLD_CHAIN_ACCOUNT_SET")</code></td><td>Domain for key ring replacement authorization.</td></tr>
+<tr><td><code>WORLD_CHAIN_SESSION_VERIFIER_INSTANCE_DOMAIN</code></td><td><code>bytes32</code></td><td><code>keccak256("WORLD_CHAIN_SESSION_VERIFIER_INSTANCE")</code></td><td>Domain for session verifier instance derivation.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="activation-parameters"><a class="header" href="#activation-parameters">Activation Parameters</a></h3>
+<p>WIP-1001 MUST NOT activate until every parameter below is assigned in fork configuration.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Name</th><th>Type</th><th>Value</th><th>Requirement</th></tr>
+</thead>
+<tbody>
+<tr><td><code>WORLD_CHAIN_ACCOUNT_MANAGER</code></td><td><code>address</code></td><td>TBD</td><td>Predeploy address for the account manager.</td></tr>
+<tr><td><code>WORLD_CHAIN_ACCOUNT_ROUTER_CODE_HASH</code></td><td><code>bytes32</code></td><td>TBD</td><td>Runtime code hash required at every World Chain account address.</td></tr>
+<tr><td><code>EIP1271_VALIDATION_GAS_LIMIT</code></td><td><code>uint64</code></td><td>TBD</td><td>Fixed gas forwarded to <code>isValidSignature</code>.</td></tr>
+<tr><td><code>EXECUTION_TRACE_VALIDATION_GAS_LIMIT</code></td><td><code>uint64</code></td><td>TBD</td><td>Fixed gas forwarded to <code>evaluateSessionPolicy</code>.</td></tr>
+<tr><td><code>BLOCK_VALIDATION_GAS_BUDGET</code></td><td><code>uint64</code></td><td>TBD</td><td>Per-block gas budget reserved for <code>0x1D</code> validation calls.</td></tr>
+<tr><td><code>MIN_VALIDATION_FAILURE_FEE</code></td><td><code>uint256</code></td><td>TBD</td><td>Minimum wei charged to the account on validation failure.</td></tr>
+<tr><td><code>MAX_EXECUTION_TRACE_BYTES</code></td><td><code>uint32</code></td><td>TBD</td><td>Maximum ABI-encoded trace size passed to a session verifier.</td></tr>
+<tr><td><code>MAX_PAYLOAD_DATA_BYTES</code></td><td><code>uint32</code></td><td>TBD</td><td>Maximum length of <code>data</code> in a <code>0x1D</code> envelope.</td></tr>
+<tr><td><code>MAX_ACCESS_LIST_ENTRIES</code></td><td><code>uint32</code></td><td>TBD</td><td>Maximum number of <a href="https://eips.ethereum.org/EIPS/eip-2930">EIP-2930</a> access-list entries in a <code>0x1D</code> envelope.</td></tr>
+<tr><td><code>MAX_SESSION_SIGNATURE_BYTES</code></td><td><code>uint32</code></td><td>TBD</td><td>Maximum length of the session <code>signature</code> field.</td></tr>
+<tr><td><code>MAX_ADMIN_AUTHORIZATION_BYTES</code></td><td><code>uint32</code></td><td>TBD</td><td>Maximum length of <code>adminAuthorization</code> calldata.</td></tr>
+<tr><td><code>MAX_VERIFIER_INSTALL_DATA_BYTES</code></td><td><code>uint32</code></td><td>TBD</td><td>Maximum length of <code>installation</code> in an admin or session verifier configuration.</td></tr>
+<tr><td><code>EDDSA_PRECOMPILE</code></td><td><code>address</code></td><td>TBD</td><td>EdDSA verification precompile address and ABI.</td></tr>
+<tr><td><code>BLS12_381_PRECOMPILE</code></td><td><code>address</code></td><td>TBD</td><td>BLS12-381 verification precompile address and ABI.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="reusable-crypto-precompiles"><a class="header" href="#reusable-crypto-precompiles">Reusable Crypto Precompiles</a></h3>
+<p>Signer contracts MAY call protocol-supported cryptographic precompiles from restricted validation frames.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Primitive</th><th>Source</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ecrecover</code></td><td>Ethereum precompile</td></tr>
+<tr><td><code>sha256</code></td><td>Ethereum precompile</td></tr>
+<tr><td><code>ripemd160</code></td><td>Ethereum precompile</td></tr>
+<tr><td><code>identity</code></td><td>Ethereum precompile</td></tr>
+<tr><td><code>modexp</code></td><td>Ethereum precompile</td></tr>
+<tr><td><code>bn254 add</code></td><td>Ethereum precompile</td></tr>
+<tr><td><code>bn254 scalar multiplication</code></td><td>Ethereum precompile</td></tr>
+<tr><td><code>bn254 pairing</code></td><td>Ethereum precompile</td></tr>
+<tr><td><code>secp256r1 verify</code></td><td><a href="https://github.com/ethereum/RIPs/blob/master/RIPS/rip-7212.md">RIP-7212</a></td></tr>
+<tr><td><code>EdDSA verify</code></td><td>Activation parameter</td></tr>
+<tr><td><code>BLS12-381 verify</code></td><td>Activation parameter</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="account-state"><a class="header" href="#account-state">Account State</a></h3>
+<p>World Chain accounts are created and managed by <code>WORLD_CHAIN_ACCOUNT_MANAGER</code>.</p>
+<pre><code class="language-solidity">struct Account {
+    WorldChainAccountVerifier admin;
+    bytes32 accountSalt;
+    WorldChainAccountVerifier[] sessionVerifiers;
+    mapping(bytes32 sessionVerifierInstance =&gt; InstalledSessionVerifier) sessionVerifierInstances;
+    bytes32 keyRingHash;
+    uint64 adminNonce;
+    uint64 transactionNonce;
+}
+
+struct WorldChainAccountVerifier {
+    address verifier;
+    bytes installation;
+}
+
+struct InstalledSessionVerifier {
+    address verifier;
+    bytes32 keyRingHash;
+}
+</code></pre>
+<p>For every existing account:</p>
+<ul>
+<li>the account address MUST have deployed runtime bytecode whose hash equals <code>WORLD_CHAIN_ACCOUNT_ROUTER_CODE_HASH</code>;</li>
+<li><code>admin.verifier</code> MUST be a deployed EIP-1271 verifier implementation and the full <code>admin</code> value is immutable for the life of the account address;</li>
+<li><code>sessionVerifiers.length</code> MUST be in <code>[1, MAX_SESSION_VERIFIERS]</code>;</li>
+<li>each <code>installation.length</code> in <code>admin</code> and <code>sessionVerifiers</code> MUST be at most <code>MAX_VERIFIER_INSTALL_DATA_BYTES</code>;</li>
+<li>each <code>sessionVerifiers[i].verifier</code> MUST be a deployed EIP-1271 verifier implementation adhering to <code>IWorldChainSessionVerifier</code>;</li>
+<li><code>sessionVerifiers</code> MUST NOT contain duplicate session verifier instances;</li>
+<li>for each active <code>sessionVerifiers[i]</code>, the corresponding derived <code>sessionVerifierInstance</code> MUST resolve to <code>sessionVerifiers[i].verifier</code> and the current <code>keyRingHash</code>;</li>
+<li><code>keyRingHash == keccak256(abi.encode(sessionVerifiers))</code>;</li>
+<li><code>adminNonce</code> is consumed only by admin operations;</li>
+<li><code>transactionNonce</code> is consumed only by successful <code>0x1D</code> transaction execution attempts;</li>
+</ul>
+<p>Verifier code is selected by verifier implementation address, not by a protocol-level enum. Session verifier membership and configuration are selected by session verifier instance. For each active <code>sessionVerifiers[i]</code>, the corresponding instance identifier is:</p>
+<pre><code class="language-solidity">sessionVerifierInstance = keccak256(abi.encode(
+    WORLD_CHAIN_SESSION_VERIFIER_INSTANCE_DOMAIN,
+    chainId,
+    account,
+    sessionVerifiers[i].verifier,
+    keccak256(sessionVerifiers[i].installation)
+));
+</code></pre>
+<p>A session verifier implementation is the contract address whose code is executed by the account router. A session verifier instance is one installed use of that implementation for a specific account and installation payload. Multiple session verifier instances MAY reference the same verifier implementation address, provided their installation hashes differ and therefore their <code>sessionVerifierInstance</code> identifiers are distinct. <code>installation</code> is opaque to the protocol and is interpreted only by the selected verifier implementation.</p>
+<p><code>sessionVerifierInstances</code> is account-router resolver state. It maps each installed session verifier instance to the verifier implementation address to <code>DELEGATECALL</code> and the <code>keyRingHash</code> for which that resolver entry is active. A session verifier instance is active iff <code>sessionVerifierInstances[sessionVerifierInstance].keyRingHash == keyRingHash != 0</code> and <code>sessionVerifierInstances[sessionVerifierInstance].verifier != address(0)</code>. Entries from previous key rings MAY remain in storage, but MUST NOT authorize after <code>keyRingHash</code> changes.</p>
+<p>After account creation, <code>setKeyRing</code> is the only execution path that mutates <code>sessionVerifiers</code>, <code>sessionVerifierInstances</code>, <code>keyRingHash</code>, or validation-affecting account storage for active session verifier instances. WIP-1001 defines no operation that mutates <code>admin</code> or the account router runtime code.</p>
+<h4 id="address-derivation"><a class="header" href="#address-derivation">Address Derivation</a></h4>
+<p>The manager derives an account address as:</p>
+<pre><code class="language-solidity">adminHash = keccak256(abi.encode(admin));
+
+account = address(uint160(uint256(keccak256(abi.encode(
+    WORLD_CHAIN_ACCOUNT_DOMAIN,
+    chainId,
+    WORLD_CHAIN_ACCOUNT_MANAGER,
+    WORLD_CHAIN_ACCOUNT_ROUTER_CODE_HASH,
+    adminHash,
+    accountSalt
+)))));
+</code></pre>
+<p>The address binds the account to the manager instance, chain, account router runtime code, full admin verifier configuration, and salt. WIP-1001 defines no operation that rotates or reinstalls <code>admin</code> for an existing account.</p>
+<h4 id="admin-operation-hashes"><a class="header" href="#admin-operation-hashes">Admin Operation Hashes</a></h4>
+<p>For every admin authorization, the manager computes a domain-separated <code>adminOperationHash</code> and calls:</p>
+<pre><code class="language-solidity">IWorldChainAccountRouter(account).isValidSignatureForAdmin(
+    adminOperationHash,
+    adminAuthorization
+)
+</code></pre>
+<p>The hash for each operation is:</p>
+<pre><code class="language-solidity">createHash = keccak256(abi.encode(
+    WORLD_CHAIN_ACCOUNT_CREATE_DOMAIN,
+    chainId,
+    WORLD_CHAIN_ACCOUNT_MANAGER,
+    WORLD_CHAIN_ACCOUNT_ROUTER_CODE_HASH,
+    account,
+    adminHash,
+    accountSalt,
+    keyRingHash
+));
+
+setKeyRingHash = keccak256(abi.encode(
+    WORLD_CHAIN_ACCOUNT_SET_DOMAIN,
+    chainId,
+    WORLD_CHAIN_ACCOUNT_MANAGER,
+    account,
+    adminNonce,
+    expectedCurrentKeyRingHash,
+    newKeyRingHash
+));
+</code></pre>
+<h3 id="account-router-and-verifier-interfaces"><a class="header" href="#account-router-and-verifier-interfaces">Account Router and Verifier Interfaces</a></h3>
+<p>The account router is the only validation target called by the manager. It dispatches to configured verifier implementations using a single controlled <code>DELEGATECALL</code>, so verifier implementations execute against the account’s storage.</p>
+<pre><code class="language-solidity">interface IWorldChainAccountRouter {
+    function installAdmin(WorldChainAccountVerifier calldata admin) external;
+
+    function installKeyRing(
+        WorldChainAccountVerifier[] calldata sessionVerifiers
+    ) external;
+
+    function isValidSignatureForAdmin(
+        bytes32 hash,
+        bytes calldata signature
+    ) external view returns (bytes4 magicValue);
+
+    function isValidSignatureForVerifier(
+        bytes32 sessionVerifierInstance,
+        bytes32 hash,
+        bytes calldata signature
+    ) external view returns (bytes4 magicValue);
+
+    function evaluateSessionPolicyForVerifier(
+        bytes32 sessionVerifierInstance,
+        IWorldChainSessionVerifier.ExecutionTraceContext calldata context
+    ) external view returns (bool allowed);
+}
+</code></pre>
+<p><code>installAdmin</code> and <code>installKeyRing</code> MUST reject any caller other than <code>WORLD_CHAIN_ACCOUNT_MANAGER</code>. The account router MUST expose no non-manager path that can mutate validation-affecting verifier storage. <code>isValidSignatureForAdmin</code>, <code>isValidSignatureForVerifier</code>, and <code>evaluateSessionPolicyForVerifier</code> MUST be callable by <code>WORLD_CHAIN_ACCOUNT_MANAGER</code> in restricted validation frames.</p>
+<p>The account router MUST dispatch admin validation only to its installed <code>admin.verifier</code>. It MUST dispatch session validation only to an active session verifier instance; unknown or stale session verifier instances MUST fail without executing verifier implementation code. For session validation, the router MUST resolve <code>sessionVerifierInstance</code> through <code>sessionVerifierInstances</code>, require the stored <code>keyRingHash</code> to equal the account’s current <code>keyRingHash</code>, and then use the stored <code>verifier</code> address for the controlled <code>DELEGATECALL</code>.</p>
+<p>When the account router handles a manager-issued admin signature check (<code>isValidSignatureForAdmin</code>), it MUST <code>DELEGATECALL</code> the selected admin verifier implementation with calldata <code>IERC1271.isValidSignature.selector || abi.encode(hash, signature)</code>. When the router handles a session signature check (<code>isValidSignatureForVerifier</code>), it MUST <code>DELEGATECALL</code> the selected session verifier implementation with calldata <code>IERC1271.isValidSignature.selector || abi.encode(hash, abi.encode(sessionVerifierInstance, signature))</code>. When the router handles <code>evaluateSessionPolicyForVerifier</code>, it MUST <code>DELEGATECALL</code> the selected session verifier implementation with calldata <code>IWorldChainSessionVerifier.evaluateSessionPolicy.selector || abi.encode(context)</code>.</p>
+<p>For session signature checks, the <code>signature</code> bytes visible to the session verifier’s ERC-1271 entrypoint are router-encoded as <code>abi.encode(sessionVerifierInstance, signature)</code>, where the second field is the <code>0x1D</code> envelope’s verifier-defined signature field. The <code>0x1D</code> transaction sender supplies only the envelope <code>sessionVerifierInstance</code> and verifier-defined <code>signature</code>; the account router performs this wrapping before dispatching to the verifier implementation.</p>
+<p>Verifier implementations install scoped storage through the following installation hook:</p>
+<pre><code class="language-solidity">interface IWorldChainAccountHooks {
+    function install(bytes calldata installation) external;
+}
+</code></pre>
+<p>Admin verifier implementations MUST implement EIP-1271 and <code>IWorldChainAccountHooks</code>. Session verifier implementations MUST implement <code>IWorldChainSessionVerifier</code>:</p>
+<pre><code class="language-solidity">interface IWorldChainSessionVerifier is IERC1271, IWorldChainAccountHooks {
+    struct AccessListEntry {
+        address account;
+        bytes32[] storageKeys;
+    }
+
+    struct WorldChainTransactionContext {
+        bytes32 signingHash;
+        uint256 chainId;
+        address account;
+        bytes32 sessionVerifierInstance;
+        uint64 nonce;
+        uint256 maxPriorityFeePerGas;
+        uint256 maxFeePerGas;
+        uint64 gasLimit;
+        bool isCreate;
+        address target;
+        uint256 value;
+        bytes data;
+        bytes4 selector;
+        AccessListEntry[] accessList;
+        bytes32 keyRingHash;
+    }
+
+    enum TraceCallKind {
+        Call,
+        StaticCall,
+        DelegateCall,
+        Create,
+        Create2
+    }
+
+    struct CallTrace {
+        uint32 depth;
+        TraceCallKind kind;
+        address caller;
+        address target;
+        uint256 value;
+        bytes4 selector;
+        bytes32 inputHash;
+        bytes32 outputHash;
+        bool success;
+        uint64 gasUsed;
+    }
+
+    struct LogTrace {
+        address emitter;
+        bytes32[] topics;
+        bytes32 dataHash;
+        uint32 callIndex;
+    }
+
+    struct WorldChainExecutionTrace {
+        bool success;
+        uint64 gasUsed;
+        bytes32 outputHash;
+        CallTrace[] calls;
+        LogTrace[] logs;
+    }
+
+    struct ExecutionTraceContext {
+        WorldChainTransactionContext transaction;
+        WorldChainExecutionTrace trace;
+    }
+
+    function evaluateSessionPolicy(
+        ExecutionTraceContext calldata context
+    ) external view returns (bool allowed);
+}
+</code></pre>
+<p><code>installation</code> is verifier-defined. The protocol does not parse it, but it commits to it through <code>adminHash</code>, <code>createHash</code>, and <code>keyRingHash</code>. For session verifier installs, the account router MUST derive each <code>sessionVerifierInstance</code>, store <code>sessionVerifierInstances[sessionVerifierInstance] = InstalledSessionVerifier(verifier, keyRingHash)</code>, and call <code>install</code> with <code>abi.encode(sessionVerifierInstance, installation)</code>. A session verifier implementation’s <code>install</code> function MUST fully write all validation-affecting state implied by <code>installation</code> into a deterministic account-storage namespace derived from <code>sessionVerifierInstance</code>. Because <code>sessionVerifierInstance</code> includes <code>keccak256(installation)</code>, two installs of the same implementation with different installation bytes MUST use different validation-affecting storage slots. Removed verifier state MAY remain in account storage, but it MUST be unreachable unless the same session verifier instance is installed again through a later <code>setKeyRing</code>.</p>
+<p>Verifier implementations MUST NOT rely on validation-affecting state stored at the verifier implementation address. Validation-affecting state MUST live in account storage installed through the account router.</p>
+<h3 id="manager-interface"><a class="header" href="#manager-interface">Manager Interface</a></h3>
+<p><code>WORLD_CHAIN_ACCOUNT_MANAGER</code> exposes:</p>
+<pre><code class="language-solidity">interface IWorldChainAccountManager {
+    function create(
+        WorldChainAccountVerifier calldata admin,
+        bytes32 accountSalt,
+        WorldChainAccountVerifier[] calldata initialSessionVerifiers,
+        bytes calldata adminAuthorization
+    ) external returns (address account);
+
+    function setKeyRing(
+        address account,
+        bytes32 expectedCurrentKeyRingHash,
+        WorldChainAccountVerifier[] calldata sessionVerifiers,
+        bytes calldata adminAuthorization
+    ) external;
+
+    function getAdmin(address account) external view returns (WorldChainAccountVerifier memory);
+    function getAdminNonce(address account) external view returns (uint64);
+    function getTransactionNonce(address account) external view returns (uint64);
+    function getKeyRingHash(address account) external view returns (bytes32);
+    function getSessionVerifiers(address account) external view returns (WorldChainAccountVerifier[] memory);
+    function isAuthorizedSessionVerifier(address account, bytes32 sessionVerifierInstance) external view returns (bool);
+    function getAuthorizedSessionVerifier(address account, bytes32 sessionVerifierInstance) external view returns (WorldChainAccountVerifier memory);
+}
+</code></pre>
+<p><code>isAuthorizedSessionVerifier</code> MUST return <code>true</code> only when <code>sessionVerifierInstance</code> resolves to an <code>InstalledSessionVerifier</code> whose <code>keyRingHash</code> equals the account’s current <code>keyRingHash</code>. <code>getAuthorizedSessionVerifier</code> MUST return the matching current <code>sessionVerifiers</code> entry and MUST fail for an absent or stale <code>sessionVerifierInstance</code>.</p>
+<h3 id="manager-events"><a class="header" href="#manager-events">Manager Events</a></h3>
+<p>Each successful state transition MUST emit exactly one matching event in the same transaction that mutates state.</p>
+<pre><code class="language-solidity">interface IWorldChainAccountManagerEvents {
+    event AccountCreated(
+        address indexed account,
+        address indexed adminVerifier,
+        bytes32 indexed adminHash,
+        bytes32 accountSalt,
+        bytes32 keyRingHash
+    );
+
+    event KeyRingSet(
+        address indexed account,
+        bytes32 indexed previousKeyRingHash,
+        bytes32 indexed newKeyRingHash,
+        uint64 adminNonce
+    );
+}
+</code></pre>
+<h3 id="manager-state-transitions"><a class="header" href="#manager-state-transitions">Manager State Transitions</a></h3>
+<p>Every admin-mutating method MUST reject <code>adminAuthorization.length &gt; MAX_ADMIN_AUTHORIZATION_BYTES</code>. It MUST also reject any <code>installation.length &gt; MAX_VERIFIER_INSTALL_DATA_BYTES</code>. If any requirement in a manager state transition fails, the method MUST revert without changing account state, account code, account storage, incrementing <code>adminNonce</code>, or emitting its state-transition event.</p>
+<p>Admin authorization is valid only when <code>IWorldChainAccountRouter(account).isValidSignatureForAdmin(adminOperationHash, adminAuthorization)</code> succeeds in a restricted validation frame and returns <code>EIP1271_MAGIC_VALUE</code>.</p>
+<p>Installing canonical account-router runtime bytecode is a native manager state transition. It MUST NOT execute account-supplied init code and MUST NOT be represented as an EVM <code>CREATE</code> or <code>CREATE2</code> from the manager.</p>
+<h4 id="create"><a class="header" href="#create"><code>create</code></a></h4>
+<p><code>create</code> MUST:</p>
+<ol>
+<li>reject <code>admin.verifier == address(0)</code>;</li>
+<li>require <code>admin.verifier</code> and each initial session verifier to have deployed code;</li>
+<li>require <code>initialSessionVerifiers.length</code> to be in <code>[1, MAX_SESSION_VERIFIERS]</code>;</li>
+<li>reject zero session verifier implementation addresses;</li>
+<li>reject oversized <code>admin.installation</code> or session verifier <code>installation</code>;</li>
+<li>compute <code>adminHash = keccak256(abi.encode(admin))</code>;</li>
+<li>derive <code>account</code>;</li>
+<li>reject if <code>account</code> already exists or already has deployed code;</li>
+<li>reject duplicate session verifier instances for <code>account</code>;</li>
+<li>compute <code>keyRingHash = keccak256(abi.encode(initialSessionVerifiers))</code>;</li>
+<li>atomically install canonical account-router runtime bytecode at <code>account</code>;</li>
+<li>call <code>IWorldChainAccountRouter(account).installAdmin(admin)</code>;</li>
+<li>call <code>IWorldChainAccountRouter(account).installKeyRing(initialSessionVerifiers)</code>;</li>
+<li>verify <code>createHash</code> through the account router’s admin validation path;</li>
+<li>initialize manager state with <code>admin</code>, <code>adminNonce = 0</code>, <code>transactionNonce = 0</code>, <code>sessionVerifiers = initialSessionVerifiers</code>, active <code>sessionVerifierInstances</code>, and <code>keyRingHash</code>;</li>
+<li>emit <code>AccountCreated(account, admin.verifier, adminHash, accountSalt, keyRingHash)</code>.</li>
+</ol>
+<h4 id="setkeyring"><a class="header" href="#setkeyring"><code>setKeyRing</code></a></h4>
+<p><code>setKeyRing</code> is the only post-creation method that mutates the key ring and MUST:</p>
+<ol>
+<li>require <code>account</code> to exist;</li>
+<li>require <code>expectedCurrentKeyRingHash == keyRingHash</code>;</li>
+<li>require <code>sessionVerifiers.length</code> to be in <code>[1, MAX_SESSION_VERIFIERS]</code>;</li>
+<li>reject duplicate session verifier instances and zero, undeployed, or oversized session verifier entries;</li>
+<li>compute <code>newKeyRingHash = keccak256(abi.encode(sessionVerifiers))</code>;</li>
+<li>reject <code>newKeyRingHash == keyRingHash</code>;</li>
+<li>compute <code>setKeyRingHash</code> using the current <code>adminNonce</code>;</li>
+<li>verify <code>setKeyRingHash</code> through the account router’s admin validation path;</li>
+<li>call <code>IWorldChainAccountRouter(account).installKeyRing(sessionVerifiers)</code>;</li>
+<li>set <code>previousKeyRingHash = keyRingHash</code>;</li>
+<li>replace the account’s full <code>sessionVerifiers</code> set with the supplied <code>sessionVerifiers</code>;</li>
+<li>write active <code>sessionVerifierInstances</code> entries for the supplied set under <code>newKeyRingHash</code>;</li>
+<li>set <code>keyRingHash = newKeyRingHash</code>;</li>
+<li>increment <code>adminNonce</code> by one;</li>
+<li>emit <code>KeyRingSet(account, previousKeyRingHash, newKeyRingHash, adminNonce)</code>.</li>
+</ol>
+<h3 id="restricted-validation-frames"><a class="header" href="#restricted-validation-frames">Restricted Validation Frames</a></h3>
+<p>The protocol uses restricted validation frames for admin authorization, session signature verification, and session policy evaluation.</p>
+<p>For each admin or session signature check, the protocol MUST perform a <code>STATICCALL</code> from <code>WORLD_CHAIN_ACCOUNT_MANAGER</code> to the account router at <code>account</code> with value <code>0</code>, gas exactly <code>EIP1271_VALIDATION_GAS_LIMIT</code>, and calldata:</p>
+<ul>
+<li><code>IWorldChainAccountRouter.isValidSignatureForAdmin.selector || abi.encode(hash, signature)</code> for admin authorization checks; or</li>
+<li><code>IWorldChainAccountRouter.isValidSignatureForVerifier.selector || abi.encode(sessionVerifierInstance, hash, signature)</code> for session signature checks.</li>
+</ul>
+<p>The call succeeds only if it returns <code>EIP1271_MAGIC_VALUE</code> and triggers no tracer rule violation. The account router is responsible for <code>DELEGATECALL</code>ing the configured verifier implementation per the dispatch rules in “Account Router and Verifier Interfaces”; the manager never calls a verifier implementation directly.</p>
+<p>For each session policy check, the protocol MUST perform a <code>STATICCALL</code> from <code>WORLD_CHAIN_ACCOUNT_MANAGER</code> to the account router at <code>account</code> with value <code>0</code>, gas exactly <code>EXECUTION_TRACE_VALIDATION_GAS_LIMIT</code>, and calldata <code>IWorldChainAccountRouter.evaluateSessionPolicyForVerifier.selector || abi.encode(sessionVerifierInstance, context)</code>. The call succeeds only if it returns <code>true</code> and triggers no tracer rule violation. The account router is responsible for <code>DELEGATECALL</code>ing the configured session verifier implementation.</p>
+<p>Failure, revert, out-of-gas, malformed return data, or a tracer violation MUST be treated as signature or policy failure.</p>
+<p>Restricted frames are enforced by a runtime opcode-and-target tracer derived from <a href="https://eips.ethereum.org/EIPS/eip-7562">ERC-7562</a>. Runtime enforcement is authoritative.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Rule ID</th><th>ERC-7562 ref</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>WIP1001-VR-1</code></td><td>OP-011</td><td>Forbid block-context opcodes: <code>BLOCKHASH</code>, <code>COINBASE</code>, <code>TIMESTAMP</code>, <code>NUMBER</code>, <code>PREVRANDAO</code>/<code>DIFFICULTY</code>, <code>GASLIMIT</code>, <code>BASEFEE</code>, <code>BLOBHASH</code>, <code>BLOBBASEFEE</code>.</td></tr>
+<tr><td><code>WIP1001-VR-2</code></td><td>OP-011</td><td>Forbid transaction-context opcodes: <code>GASPRICE</code>, <code>ORIGIN</code>.</td></tr>
+<tr><td><code>WIP1001-VR-3</code></td><td>OP-020</td><td>Forbid external account inspection: <code>BALANCE</code>, <code>SELFBALANCE</code>, <code>EXTCODESIZE</code>, <code>EXTCODECOPY</code>, <code>EXTCODEHASH</code>.</td></tr>
+<tr><td><code>WIP1001-VR-4</code></td><td>OP-031, OP-032</td><td>Forbid persistent and transient state mutation: <code>SSTORE</code>, <code>TLOAD</code>, <code>TSTORE</code>.</td></tr>
+<tr><td><code>WIP1001-VR-5</code></td><td>OP-031</td><td>Forbid log emission: <code>LOG0</code>, <code>LOG1</code>, <code>LOG2</code>, <code>LOG3</code>, <code>LOG4</code>.</td></tr>
+<tr><td><code>WIP1001-VR-6</code></td><td>OP-031, OP-040</td><td>Forbid <code>CALL</code>, <code>CALLCODE</code>, <code>CREATE</code>, <code>CREATE2</code>.</td></tr>
+<tr><td><code>WIP1001-VR-7</code></td><td>OP-051</td><td>Forbid <code>SELFDESTRUCT</code>.</td></tr>
+<tr><td><code>WIP1001-VR-8</code></td><td>OP-061</td><td>Permit <code>STATICCALL</code> only to allowlisted precompiles.</td></tr>
+<tr><td><code>WIP1001-VR-9</code></td><td>OP-052</td><td>Permit <code>DELEGATECALL</code> only when the delegatee bytecode satisfies the same rule set. The tracer MUST validate delegatees recursively.</td></tr>
+<tr><td><code>WIP1001-VR-10</code></td><td>-</td><td>Precompile execution does not create an additional EVM code frame.</td></tr>
+<tr><td><code>WIP1001-VR-11</code></td><td>-</td><td>Permit reads of the signer contract’s own bytecode via <code>CODECOPY</code> and <code>CODESIZE</code>.</td></tr>
+<tr><td><code>WIP1001-VR-12</code></td><td>-</td><td>Permit reads of the signer contract’s own storage via <code>SLOAD</code>.</td></tr>
+<tr><td><code>WIP1001-VR-13</code></td><td>-</td><td>Permit <code>KECCAK256</code>, <code>CHAINID</code>, <code>GAS</code>, stack, memory, calldata, and deterministic arithmetic opcodes.</td></tr>
+</tbody>
+</table>
+</div>
+<p>Adding a new precompile to the validation allowlist is a hard-fork change.</p>
+<h3 id="transaction-type-0x1d"><a class="header" href="#transaction-type-0x1d">Transaction Type <code>0x1D</code></a></h3>
+<p>The wire encoding is:</p>
+<pre><code class="language-solidity">0x1D || rlp([
+    chainId,
+    nonce,
+    maxPriorityFeePerGas,
+    maxFeePerGas,
+    gasLimit,
+    account,
+    sessionVerifierInstance,
+    to,
+    value,
+    data,
+    accessList,
+    signature
+])
+</code></pre>
+<p>The signing hash is:</p>
+<pre><code class="language-solidity">signingHash = keccak256(
+    0x1D ||
+    rlp([
+        chainId,
+        nonce,
+        maxPriorityFeePerGas,
+        maxFeePerGas,
+        gasLimit,
+        account,
+        sessionVerifierInstance,
+        to,
+        value,
+        data,
+        accessList
+    ])
+);
+</code></pre>
+<p>The transaction hash is:</p>
+<pre><code class="language-solidity">txHash = keccak256(
+    0x1D ||
+    rlp([
+        chainId,
+        nonce,
+        maxPriorityFeePerGas,
+        maxFeePerGas,
+        gasLimit,
+        account,
+        sessionVerifierInstance,
+        to,
+        value,
+        data,
+        accessList,
+        signature
+    ])
+);
+</code></pre>
+<p>Envelope validity requirements:</p>
+<ul>
+<li><code>chainId</code> MUST equal the executing chain ID;</li>
+<li><code>nonce</code> MUST equal <code>Account.transactionNonce</code>;</li>
+<li><code>to</code> MUST be the empty byte string for contract creation or exactly 20 bytes for a call;</li>
+<li><code>data.length &lt;= MAX_PAYLOAD_DATA_BYTES</code>;</li>
+<li><code>accessList.length &lt;= MAX_ACCESS_LIST_ENTRIES</code>;</li>
+<li><code>signature.length &lt;= MAX_SESSION_SIGNATURE_BYTES</code>;</li>
+<li><code>sessionVerifierInstance</code> MUST be exactly 32 bytes;</li>
+<li><code>accessList</code> MUST use EIP-2930 encoding;</li>
+<li><code>maxFeePerGas</code> and <code>maxPriorityFeePerGas</code> follow <a href="https://eips.ethereum.org/EIPS/eip-1559">EIP-1559</a> validity rules.</li>
+</ul>
+<h3 id="validation-execution-and-failure-semantics"><a class="header" href="#validation-execution-and-failure-semantics">Validation, Execution, and Failure Semantics</a></h3>
+<p>Block builders MUST reserve <code>EIP1271_VALIDATION_GAS_LIMIT + EXECUTION_TRACE_VALIDATION_GAS_LIMIT</code> from <code>BLOCK_VALIDATION_GAS_BUDGET</code> before including a <code>0x1D</code> transaction. If the remaining budget is insufficient, the transaction MUST be deferred; deferral is not a validation failure and MUST NOT mutate account state.</p>
+<p>To include a <code>0x1D</code> transaction, the protocol MUST:</p>
+<ol>
+<li>decode and validate the envelope;</li>
+<li>load <code>account</code> from <code>WORLD_CHAIN_ACCOUNT_MANAGER</code>;</li>
+<li>load the current <code>keyRingHash</code>, resolve <code>sessionVerifierInstance</code> through <code>sessionVerifierInstances</code>, require <code>verifier != address(0)</code> and require the stored <code>keyRingHash</code> to equal the current <code>keyRingHash</code>, and load the resolved verifier implementation address;</li>
+<li>require the account balance to cover the worst-case payload gas charge and <code>MIN_VALIDATION_FAILURE_FEE</code>;</li>
+<li>compute <code>signingHash</code>;</li>
+<li>call <code>IWorldChainAccountRouter(account).isValidSignatureForVerifier(sessionVerifierInstance, signingHash, signature)</code> in a restricted validation frame;</li>
+<li>if signature validation fails, apply validation-failure semantics and stop;</li>
+<li>increment <code>Account.transactionNonce</code> by one;</li>
+<li>execute the payload tentatively with <code>account</code> as the EVM sender and gas charged against envelope <code>gasLimit</code>;</li>
+<li>construct <code>ExecutionTraceContext</code> with <code>context.transaction.sessionVerifierInstance</code> set to the selected session verifier instance and <code>context.transaction.keyRingHash</code> set to the current account <code>keyRingHash</code>;</li>
+<li>if <code>abi.encode(context.trace).length &gt; MAX_EXECUTION_TRACE_BYTES</code>, discard tentative payload state, apply trace-overflow semantics, and stop;</li>
+<li>call <code>IWorldChainAccountRouter(account).evaluateSessionPolicyForVerifier(sessionVerifierInstance, context)</code> in a restricted validation frame;</li>
+<li>if policy validation fails, discard tentative payload state, apply validation-failure semantics, and stop;</li>
+<li>otherwise commit the normal payload result, including a reverted payload result if the target call reverted.</li>
+</ol>
+<p>Failure classes are:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Failure</th><th>Nonce</th><th>Payload state/logs</th><th>Fee behavior</th></tr>
+</thead>
+<tbody>
+<tr><td>Envelope, account, balance, nonce, or authorization precheck failure</td><td>unchanged</td><td>none</td><td>transaction is invalid and not included</td></tr>
+<tr><td>Validation budget exhausted</td><td>unchanged</td><td>none</td><td>transaction is deferred</td></tr>
+<tr><td>Signature validation failure</td><td>incremented</td><td>none</td><td>charge <code>max(MIN_VALIDATION_FAILURE_FEE, baseFee * EIP1271_VALIDATION_GAS_LIMIT)</code></td></tr>
+<tr><td>Trace exceeds <code>MAX_EXECUTION_TRACE_BYTES</code></td><td>incremented</td><td>discarded</td><td>charge as a failed payload execution under the envelope gas rules</td></tr>
+<tr><td>Session policy failure</td><td>incremented</td><td>discarded</td><td>charge <code>max(MIN_VALIDATION_FAILURE_FEE, baseFee * EIP1271_VALIDATION_GAS_LIMIT)</code>; payload gas is not additionally charged</td></tr>
+<tr><td>Payload execution revert with accepted policy</td><td>incremented</td><td>EVM revert result committed</td><td>charge normal payload gas</td></tr>
+</tbody>
+</table>
+</div>
+<p>All validation gas consumed by signature and policy checks MUST count against <code>BLOCK_VALIDATION_GAS_BUDGET</code>. Validation gas is not deducted from the envelope <code>gasLimit</code>.</p>
+<h3 id="txpool-revalidation"><a class="header" href="#txpool-revalidation">Txpool Revalidation</a></h3>
+<p>World Chain clients MUST revalidate every pooled <code>0x1D</code> transaction at least once per block until inclusion or eviction.</p>
+<p>On pool admission or successful revalidation, the client MUST record <code>account</code>, <code>sessionVerifierInstance</code>, <code>nonce</code>, <code>signingHash</code>, <code>signature</code>, and the account’s active <code>keyRingHash</code>. A transaction is eligible to remain pooled only while all conditions hold:</p>
+<ul>
+<li><code>account</code> exists;</li>
+<li>the account balance can cover <code>MIN_VALIDATION_FAILURE_FEE</code> at the current <code>baseFee</code>;</li>
+<li>the transaction nonce can still become executable under the account nonce ordering rules;</li>
+<li><code>sessionVerifierInstance</code> resolves to a nonzero verifier in <code>sessionVerifierInstances</code> with the account’s current <code>keyRingHash</code>;</li>
+<li>the current account <code>keyRingHash</code> equals the hash recorded when the transaction was admitted or last revalidated.</li>
+</ul>
+<p>A client MAY reuse a prior successful signature-validation result only when the cached <code>(account, sessionVerifierInstance, signingHash, signature, keyRingHash)</code> tuple exactly matches the current transaction and account state. Block builders MAY rely on such a cache to avoid repeating signature verification before block construction; if the active <code>keyRingHash</code> changes, the cached result MUST be discarded and the signature MUST be revalidated.</p>
+<p>The <code>keyRingHash</code> comparison is the deterministic anchor for block validation: a verifier MAY accept a cached signature result only if the active account hash equals the recorded hash; otherwise it MUST execute signature validation again.</p>
+<h3 id="signer-state-determinism"><a class="header" href="#signer-state-determinism">Signer-State Determinism</a></h3>
+<p>Session verifier behavior that can change <code>isValidSignature</code> or <code>evaluateSessionPolicy</code> for already accepted transactions MUST be immutable for a session verifier instance. Validation-affecting updates MUST be represented by selecting a different verifier implementation address or different installation bytes, deriving a different <code>sessionVerifierInstance</code>, and installing a replacement set through <code>setKeyRing</code>, which updates <code>keyRingHash</code>.</p>
+<p>This applies to root rotations, verification-key rotations, signer recovery changes, signer revocation lists, account binding changes, and policy configuration changes. State that cannot affect validation MAY update in place.</p>
+<h2 id="rationale"><a class="header" href="#rationale">Rationale</a></h2>
+<p>EIP-1271 gives World Chain one protocol boundary for all authorization schemes. The protocol verifies a signer contract through the account router; the signer contract decides how to authenticate.</p>
+<p>Execution policy belongs inside the session verifier. The protocol supplies the canonical transaction context and execution trace, then asks the verifier for a boolean decision.</p>
+<p>Validation gas limits are protocol constants, not signer-selected values. This gives clients a fixed resource bound for mempool validation and block execution.</p>
+<p>Validation gas is supplied from a per-block budget rather than the envelope <code>gasLimit</code>. This keeps the payload gas model close to EIP-1559 transactions while bounding validation work per block.</p>
+<p>Whole-set <code>setKeyRing</code> updates make the account’s session authorization state a single ordered set with one deterministic <code>keyRingHash</code>. Session verifier instances allow that ordered set to contain multiple entries backed by the same verifier implementation while still giving clients a stable membership key for cached validation. The account-router resolver stores the verifier implementation address beside the key-ring generation so validation can dispatch from <code>sessionVerifierInstance</code> without accepting a verifier address from transaction calldata. Clients can bind cached signature validation to that hash and must revalidate when it changes.</p>
+<p>Restricted validation frames prevent validation from depending on mutable external state, block metadata, or arbitrary external contract calls.</p>
+<h2 id="backwards-compatibility"><a class="header" href="#backwards-compatibility">Backwards Compatibility</a></h2>
+<p>WIP-1001 introduces a new EIP-2718 transaction type and a new account manager predeploy. Existing Ethereum transaction types, EOAs, contracts, and Safe accounts are unchanged.</p>
+<p>Existing Safe accounts MAY deploy or delegate to EIP-1271 signer contracts that satisfy this specification, but WIP-1001 does not require Safe migration.</p>
+<h2 id="test-cases"><a class="header" href="#test-cases">Test Cases</a></h2>
+<p>Conforming implementations MUST pass vectors for:</p>
+<ul>
+<li>address derivation across multiple <code>(chainId, manager, adminSigner, accountSalt)</code> tuples;</li>
+<li><code>keyRingHash = keccak256(abi.encode(sessionVerifiers))</code> for empty-forbidden, single-verifier, multi-verifier, repeated implementation with distinct installations, and reordered verifier sets;</li>
+<li><code>sessionVerifierInstance</code> derivation, including domain separation, chain ID binding, account binding, implementation-address binding, installation-hash binding, duplicate-instance rejection, and repeated implementation addresses with distinct installation bytes;</li>
+<li><code>sessionVerifierInstances</code> resolution, including verifier address lookup, stale key-ring hash rejection, zero verifier rejection, and repeated implementation addresses with distinct instance IDs;</li>
+<li><code>create</code> validation, including deployed-code checks, duplicate instance and zero verifier rejection, account-exists rejection, initial nonce values, initial <code>keyRingHash</code>, <code>AccountCreated</code>, and default World ID admin signer account binding;</li>
+<li><code>setKeyRing</code> validation, including stale <code>expectedCurrentKeyRingHash</code>, duplicate instance, zero, undeployed, empty, oversized, and no-op verifier set rejection;</li>
+<li><code>setKeyRing</code> success behavior, including full-set replacement, <code>newKeyRingHash</code>, <code>adminNonce</code> increment, <code>KeyRingSet</code>, authorization lookup updates, and failure atomicity;</li>
+<li><code>createHash</code> and <code>setKeyRingHash</code> domain separation, parameter binding, nonce binding, and negative replay cases across accounts, chains, managers, hashes, and operation types;</li>
+<li><code>0x1D</code> RLP encoding, signing hash, and transaction hash;</li>
+<li>malformed envelope rejection for <code>chainId</code>, <code>nonce</code>, <code>to</code>, <code>data</code>, <code>accessList</code>, <code>signature</code>, and EIP-1559 fee bounds;</li>
+<li>transaction validation against the current session verifier instance resolver, including unauthorized session verifier instance rejection and <code>ExecutionTraceContext.transaction.keyRingHash</code>;</li>
+<li>failure semantics for envelope/precheck failures, validation-budget exhaustion, signature failures, trace overflow, policy failures, and payload reverts;</li>
+<li>txpool revalidation, signature-validation cache reuse, and cache invalidation when <code>keyRingHash</code>, session verifier instance authorization, account balance, or nonce eligibility changes;</li>
+<li>signer-state determinism, including rejection of validation-affecting session verifier updates behind an unchanged session verifier instance;</li>
+<li>restricted-frame positive cases and each forbidden opcode or call target;</li>
+<li>default signer factory <code>CREATE2</code> address computation, idempotency, metadata, and incompatible-code rejection;</li>
+<li>World ID <code>worldIdField</code>, <code>worldIdAction</code>, admin proof, and session proof inputs;</li>
+<li>default secp256k1 low-s, <code>v</code>, owner, and signature-length checks;</li>
+<li>block validation budget exhaustion and validation-failure fee charging.</li>
+</ul>
+<p>Complete golden vectors and a conformance test suite MUST be published before this WIP advances to Review.</p>
+<h2 id="security-considerations"><a class="header" href="#security-considerations">Security Considerations</a></h2>
+<ul>
+<li>Admin authorization hashes bind domain, chain ID, manager, account, operation parameters, and nonce where applicable. A signature valid for <code>create</code> MUST NOT be valid for <code>setKeyRing</code>, another account, another chain, another manager, or another key ring hash.</li>
+<li>The admin signer is immutable in the account address. A broken or lost admin signer requires migrating assets to a new account; applications that need recovery SHOULD use admin signers with recovery or multisig logic from account creation.</li>
+<li><code>setKeyRing</code> is the only post-creation key ring mutation path. A compromised session verifier instance remains authorized until an admin-authorized replacement set is included.</li>
+<li><code>expectedCurrentKeyRingHash</code> protects <code>setKeyRing</code> authorizations from applying to an unexpected current set. Admin tooling SHOULD surface the complete replacement set before signing because omitted verifiers are removed atomically.</li>
+<li><code>keyRingHash</code> binds cached validation to the ordered <code>sessionVerifiers</code> set. Clients MUST discard cached signature results when the active hash changes, even if the transaction’s <code>sessionVerifierInstance</code> remains present in the new set.</li>
+<li><code>keyRingHash</code> does not commit to mutable verifier behavior by itself. Session verifier state that can affect <code>isValidSignature</code> or <code>evaluateSessionPolicy</code> MUST be immutable for that verifier instance; upgrades that affect validation require a different verifier implementation address or different installation bytes installed through <code>setKeyRing</code>.</li>
+<li>The protocol MUST verify that <code>sessionVerifierInstance</code> is authorized for <code>account</code> before calling verifier code. Unauthorized instances MUST fail as a precheck rather than receiving a validation call.</li>
+<li><code>sessionVerifierInstances</code> entries from prior key rings MAY remain in storage. They MUST NOT authorize unless their stored <code>keyRingHash</code> equals the account’s current <code>keyRingHash</code>.</li>
+<li>Fixed validation gas limits bound signer execution. Signers that exceed the limit fail validation, and all signature and policy validation gas counts against <code>BLOCK_VALIDATION_GAS_BUDGET</code>.</li>
+<li><code>BLOCK_VALIDATION_GAS_BUDGET</code> is scarce. <code>MIN_VALIDATION_FAILURE_FEE</code> MUST be tuned so validation spam is costly, and clients MUST reject pooled transactions that cannot pay it.</li>
+<li>Builders may prefer transactions with cheaper validation profiles. Fixed validation gas bounds the worst-case bias but does not eliminate ordering incentives.</li>
+<li><code>MAX_EXECUTION_TRACE_BYTES</code>, <code>MAX_PAYLOAD_DATA_BYTES</code>, <code>MAX_ACCESS_LIST_ENTRIES</code>, <code>MAX_SESSION_SIGNATURE_BYTES</code>, and <code>MAX_ADMIN_AUTHORIZATION_BYTES</code> bound calldata, decoding, memory, and ABI-encoding costs.</li>
+<li>Restricted frames forbid mutable external-state reads and block-context opcodes. Signers that need time, block, or external-state constraints MUST bind them into the signature or proof input.</li>
+<li><code>DELEGATECALL</code> inside restricted validation frames is safe only when the delegatee bytecode satisfies the same tracer rules recursively.</li>
+<li>Because verifier implementations execute via <code>DELEGATECALL</code> against account storage, storage isolation is not enforced by the EVM. Session verifier implementations MUST use deterministic account-storage namespaces derived from <code>sessionVerifierInstance</code> and MUST NOT write outside their assigned namespace except through explicitly specified account-router storage APIs, if any. Protocol deployments SHOULD allow only audited or approved verifier implementations when verifier code is delegatecalled.</li>
+<li>The <code>0x1D</code> envelope exposes <code>account</code> and <code>sessionVerifierInstance</code>. Applications that need stronger privacy should use verifier contracts that aggregate or rotate credentials.</li>
+<li>World ID signers MUST bind <code>block.chainid</code> into <code>worldIdAction</code> or session nonce inputs to prevent cross-chain proof replay.</li>
+<li>The default World ID admin signer self-reports <code>account()</code>. The manager checks this only for default-factory-deployed World ID admin signers; custom signers are responsible for their own consistency.</li>
+<li><code>create</code> does not bind <code>msg.sender</code>, so a copied call can be front-run. The resulting account state is identical because the authorization commits to all state-determining parameters.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../wips/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../wips/wip-1002.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../wips/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../wips/wip-1002.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-c22b7243.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../specs/static/mermaid-3a6b472a.min.js"></script>
+        <script src="../specs/static/mermaid-init-025d9952.js"></script>
+        <script src="../specs/static/solidity-min-a44de257.js"></script>
+
+
+
+    </div>
+    </body>
+</html>
