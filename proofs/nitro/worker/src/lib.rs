@@ -37,13 +37,17 @@ use world_chain_proof_nitro::{
     host::{EnclaveEndpoint, NitroProver},
 };
 use world_chain_proof_protocol::WorldHardforkConfig as ProtocolHardforkConfig;
-use world_chain_proof_worker::{ProofJobBackend, ProofWorker, ProofWorkerConfig};
-use world_chain_prover_service::{
-    BackendProofState, BackendUpdate, ProofBackend, ProofData, ProofRequest, RpcProverServiceClient,
+use world_chain_proof_worker::{
+    ClaimedProofJobHandler, ProofJob, ProofWorker, ProofWorkerConfig, RetryConfig,
 };
+use world_chain_prover_service::{ProofBackend, ProofData, RpcProverServiceClient};
+
+const DEFAULT_SUBMIT_PROOF_RETRY_MAX_RETRIES: usize = 10;
+const DEFAULT_SUBMIT_PROOF_RETRY_INITIAL_DELAY_MS: u64 = 100;
+const DEFAULT_SUBMIT_PROOF_RETRY_MAX_DELAY_MS: u64 = 10_000;
 
 // ──────────────────────────────────────────────────────────────────────────────────────
-// NitroBackend — ProofJobBackend implementation for the Nitro TEE lane
+// NitroBackend — ClaimedProofJobHandler implementation for the Nitro TEE lane
 // ──────────────────────────────────────────────────────────────────────────────────────
 
 #[derive(Clone, Debug)]
@@ -67,12 +71,15 @@ impl NitroBackend {
     }
 }
 
-impl ProofJobBackend for NitroBackend {
+#[async_trait::async_trait]
+impl ClaimedProofJobHandler for NitroBackend {
     fn lane(&self) -> ProofBackend {
         ProofBackend::Nitro
     }
 
-    fn start(&self, request: &ProofRequest) -> anyhow::Result<BackendUpdate> {
+    async fn handle_claimed_job(&self, job: ProofJob) -> anyhow::Result<ProofData> {
+        let request = &job.request;
+
         let start_block = request
             .l2_block_number
             .checked_sub(self.config.block_interval)
@@ -89,23 +96,26 @@ impl ProofJobBackend for NitroBackend {
         let prover =
             NitroProver::with_runtime(endpoint, self.config.expected_pcrs, self.rt_handle.clone());
 
-        let input = build_range_input(
-            &self.config.online,
-            RangeWitnessRequest {
-                start_block,
-                end_block: request.l2_block_number,
-                l1_head: Some(request.l1_head),
-                allow_unfinalized: false,
-            },
-        )
+        // Witness generation is synchronous and heavy; keep it off the async scheduler.
+        let input = tokio::task::block_in_place(|| {
+            build_range_input(
+                &self.config.online,
+                RangeWitnessRequest {
+                    start_block,
+                    end_block: request.l2_block_number,
+                    l1_head: Some(request.l1_head),
+                    allow_unfinalized: false,
+                },
+            )
+        })
         .context("witness generation failed")?;
 
         let nitro_request = NitroRangeProofRequest::from_witness_data(&input.witness, None)
             .context("witness serialize")?;
 
-        let artifact = self
-            .rt_handle
-            .block_on(prover.prove_range_async(nitro_request))
+        let artifact = prover
+            .prove_range_async(nitro_request)
+            .await
             .context("nitro enclave proving failed")?;
 
         if artifact.boot_info.l2PostRoot != request.root_claim {
@@ -145,18 +155,10 @@ impl ProofJobBackend for NitroBackend {
             "enclave attested range proof"
         );
 
-        Ok(BackendUpdate::Complete(ProofData::Nitro {
+        Ok(ProofData::Nitro {
             attestation: Bytes::from(artifact.attestation_doc),
             signature: Bytes::from(artifact.signature),
-        }))
-    }
-
-    fn advance(
-        &self,
-        _request: &ProofRequest,
-        _state: BackendProofState,
-    ) -> anyhow::Result<BackendUpdate> {
-        bail!("Nitro backend does not support durable backend jobs")
+        })
     }
 }
 
@@ -261,6 +263,30 @@ struct Cli {
     #[arg(long, default_value_t = 1)]
     max_concurrent_jobs: usize,
 
+    /// Maximum retries after a retryable submitProof failure.
+    #[arg(
+        long,
+        env = "SUBMIT_PROOF_RETRY_MAX_RETRIES",
+        default_value_t = DEFAULT_SUBMIT_PROOF_RETRY_MAX_RETRIES
+    )]
+    submit_proof_retry_max_retries: usize,
+
+    /// Initial delay in milliseconds before retrying submitProof.
+    #[arg(
+        long,
+        env = "SUBMIT_PROOF_RETRY_INITIAL_DELAY_MS",
+        default_value_t = DEFAULT_SUBMIT_PROOF_RETRY_INITIAL_DELAY_MS
+    )]
+    submit_proof_retry_initial_delay_ms: u64,
+
+    /// Maximum delay in milliseconds between submitProof retries.
+    #[arg(
+        long,
+        env = "SUBMIT_PROOF_RETRY_MAX_DELAY_MS",
+        default_value_t = DEFAULT_SUBMIT_PROOF_RETRY_MAX_DELAY_MS
+    )]
+    submit_proof_retry_max_delay_ms: u64,
+
     /// The unique worker id.
     #[arg(long)]
     worker_id: String,
@@ -300,6 +326,9 @@ pub fn run() -> Result<()> {
         prover_service = %cli.prover_service_url,
         enclave_cid = cli.enclave_cid,
         block_interval = cli.block_interval,
+        submit_proof_retry_max_retries = cli.submit_proof_retry_max_retries,
+        submit_proof_retry_initial_delay_ms = cli.submit_proof_retry_initial_delay_ms,
+        submit_proof_retry_max_delay_ms = cli.submit_proof_retry_max_delay_ms,
         "nitro-worker starting"
     );
 
@@ -325,6 +354,13 @@ pub fn run() -> Result<()> {
         .with_context(|| format!("failed to connect to {}", cli.prover_service_url))?;
 
     let worker_id = format!("{}-nitro-worker", cli.worker_id);
+    let retry_initial_delay = Duration::from_millis(cli.submit_proof_retry_initial_delay_ms);
+    let retry_max_delay = Duration::from_millis(cli.submit_proof_retry_max_delay_ms);
+    let retry_config = RetryConfig::new(
+        cli.submit_proof_retry_max_retries,
+        retry_initial_delay,
+        retry_max_delay,
+    );
     let worker = ProofWorker::new(
         queue,
         backend,
@@ -332,6 +368,7 @@ pub fn run() -> Result<()> {
             worker_id,
             poll_interval: Duration::from_secs(cli.poll_interval_seconds),
             max_concurrent_jobs: cli.max_concurrent_jobs,
+            retry_config,
         },
     );
 
